@@ -1,0 +1,47 @@
+### ===== JAVA / MAVEN (para tus microservicios Spring) ===== ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+*.class
+*.jar
+*.war
+*.ear
+
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+### ===== NODE (para los microservicios de tu amigo) ===== ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.env
+.env.local
+.env.*.local
+
+### ===== IDEs ===== ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.classpath
+.project
+
+### ===== Sistema operativo ===== ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### ===== Docker / Kubernetes (por si generan volúmenes locales) ===== ###
+*.log
+docker-data/
+
+### ===== Variables de entorno / secretos ===== ###
+*.env
+application-local.yml
+application-local.yaml
