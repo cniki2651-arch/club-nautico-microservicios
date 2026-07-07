@@ -12,21 +12,10 @@
     <name>ClubNauticoContainer</name>
     <description>Proyecto agregador: compila todos los microservicios Spring del Club Nautico con un solo comando</description>
 
-    <!--
-        Este pom NO tiene codigo propio. Solo lista los modulos (microservicios Spring)
-        que se compilan juntos al correr "mvn clean install" desde esta carpeta.
 
-        Cada modulo listado abajo debe:
-        1) Ser una carpeta HERMANA de este pom.xml (mismo nivel, no adentro)
-        2) Tener su propio pom.xml con su propio <parent> (spring-boot-starter-parent)
-    -->
     <modules>
         <module>ClubNauticoMSSocios</module>
-        <!-- Se agregan aqui conforme se van creando (carpetas HIJAS de Container): -->
-        <!-- <module>ms-facturacion</module> -->
-        <!-- <module>auth-service</module> -->
-        <!-- <module>eureka-server</module> -->
-        <!-- <module>config-server</module> -->
+        <module>club.ms.config</module>
     </modules>
 
 </project>
