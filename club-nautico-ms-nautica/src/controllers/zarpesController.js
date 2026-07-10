@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const amqp = require('amqplib');
 
 // 1. Listar zarpes
 const obtenerZarpes = async (req, res) => {
@@ -20,51 +21,67 @@ const obtenerZarpes = async (req, res) => {
         res.status(500).json({ mensaje: 'Error al cargar el historial de zarpes.' });
     }
 };
-
-// 2. Crear un nuevo Permiso de Zarpe
+// 2. Crear un nuevo Permiso de Zarpe (ACTUALIZADO CON RABBITMQ)
 const crearZarpe = async (req, res) => {
-    const {
-        id_socio, id_embarcacion, id_tripulante,
-        fecha_salida, hora_salida, fecha_retorno, hora_retorno,
-        destino, pasajeros
-    } = req.body;
+  const { id_socio, id_embarcacion, id_tripulante, fecha_salida, hora_salida, fecha_retorno, hora_retorno, destino, pasajeros } = req.body;
 
-    try {
-        // TODO: MICROSERVICIOS - Aquí en el futuro debes hacer un 'fetch' o 'axios' a ms-socios y ms-finanzas 
-        // para verificar deudas y estado del socio. Por ahora, asumimos que está bien para no romper el flujo.
-
-        // REGLA DE NEGOCIO LOCAL: Verificar que la embarcación esté validada por Capitania
-        const checkEmbQuery = "SELECT estado_capitania FROM embarcaciones WHERE id_embarcacion = ?";
-        const [checkEmb] = await pool.query(checkEmbQuery, [id_embarcacion]);
-
-        if (checkEmb.length === 0) {
-            return res.status(404).json({ mensaje: 'Embarcación no encontrada.' });
-        }
-        if (checkEmb[0].estado_capitania !== 'Validado') {
-            return res.status(400).json({ mensaje: 'Zarpe Bloqueado: La embarcación seleccionada no tiene validación vigente.' });
-        }
-
-        // TODO: MICROSERVICIOS - Aquí iría la consulta a ms-tripulacion para ver si el tripulante está autorizado.
-
-        const query = `
-            INSERT INTO zarpes (id_socio, id_embarcacion, id_tripulante, fecha_salida, hora_salida, fecha_retorno, hora_retorno, destino, pasajeros, estado) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente')
-        `;
-        
-        // Convertimos el array/objeto de pasajeros a string JSON para MySQL
-        const pasajerosJSON = JSON.stringify(pasajeros || []);
-        
-        const values = [id_socio, id_embarcacion, id_tripulante, fecha_salida, hora_salida, fecha_retorno, hora_retorno, destino, pasajerosJSON];
-        const [resultado] = await pool.query(query, values);
-
-        res.status(201).json({
-            mensaje: 'Solicitud de zarpe registrada con éxito.',
-            id_zarpe: resultado.insertId
-        });
-    } catch (error) {
-        console.error('Error al registrar zarpe:', error);
-        res.status(500).json({ mensaje: 'Error interno al registrar el permiso de salida.' });
+  try {
+    const checkEmbQuery = "SELECT estado_capitania FROM embarcaciones WHERE id_embarcacion = ?";
+    const [checkEmb] = await pool.query(checkEmbQuery, [id_embarcacion]);
+    
+    if (checkEmb.length === 0) {
+      return res.status(404).json({ mensaje: 'Embarcación no encontrada.' });
     }
+    if (checkEmb[0].estado_capitania !== 'Validado') {
+      return res.status(400).json({ mensaje: 'Zarpe Bloqueado: La embarcación seleccionada no tiene validación vigente.' });
+    }
+
+    const query = `
+      INSERT INTO zarpes (id_socio, id_embarcacion, id_tripulante, fecha_salida, hora_salida, fecha_retorno, hora_retorno, destino, pasajeros, estado)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente')
+    `;
+    const pasajerosJSON = JSON.stringify(pasajeros || {});
+    const values = [id_socio, id_embarcacion, id_tripulante, fecha_salida, hora_salida, fecha_retorno, hora_retorno, destino, pasajerosJSON];
+    
+    const [resultado] = await pool.query(query, values);
+
+    // --- INICIO INTEGRACIÓN RABBITMQ ---
+    try {
+      const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
+      const channel = await connection.createChannel();
+      const exchangeName = 'club_nautico_exchange';
+      const routingKey = 'evento.zarpe.registrado';
+
+      await channel.assertExchange(exchangeName, 'topic', { durable: true });
+
+      const mensaje = {
+        evento: "zarpe_registrado",
+        data: {
+          id_embarcacion: id_embarcacion,
+          id_socio: id_socio,
+          destino: destino,
+          fecha_salida: `${fecha_salida}T${hora_salida}Z`
+        }
+      };
+
+      channel.publish(exchangeName, routingKey, Buffer.from(JSON.stringify(mensaje)));
+      console.log(`[RabbitMQ] Evento emitido: ${routingKey}`);
+
+      setTimeout(() => { connection.close(); }, 500);
+    } catch (rabbitError) {
+      console.error("Error al conectar con RabbitMQ:", rabbitError);
+    }
+    // --- FIN INTEGRACIÓN RABBITMQ ---
+
+    res.status(201).json({
+      mensaje: 'Solicitud de zarpe registrada con éxito y evento emitido.',
+      id_zarpe: resultado.insertId
+    });
+
+  } catch (error) {
+    console.error('Error al registrar zarpe:', error);
+    res.status(500).json({ mensaje: 'Error interno al registrar el permiso de salida.' });
+  }
 };
 
 // 3. Aprobar el Zarpe (Cambiar estado)

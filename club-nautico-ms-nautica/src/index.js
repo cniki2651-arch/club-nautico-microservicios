@@ -19,14 +19,21 @@ app.use('/api/nautica/radas', radasRoutes);
 app.use('/api/nautica/zarpes', zarpesRoutes);
 app.use('/api/nautica/tripulantes', tripulantesRoutes);
 
-// Añade esto donde tienes tus otras rutas:
+// A. HEALTH CHECK (Obligatorio para Kubernetes y Eureka)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    service: 'ms-nautica',
+    timestamp: new Date().toISOString()
+  });
+});
 
 app.get('/', (req, res) => {
   res.json({ mensaje: '¡Microservicio Náutico (ms-nautica) en línea!' });
 });
 
 // Levantar el servidor en el puerto de Docker/Node
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8083;
 app.listen(PORT, () => {
   console.log("==========================================");
   console.log(`🛥️  SISTEMA POSEIDON: ms-nautica iniciado`);
