@@ -1,3 +1,25 @@
+server:
+  port: 8081
+
 spring:
   application:
-    name: ClubNauticoMSAuth
+    name: auth-service
+  config:
+    import: "optional:configserver:"
+  datasource:
+    url: jdbc:postgresql://localhost:5433/club_nautica_auth_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: false # <-- AÑADE ESTO: Evita que intente registrarse
+    fetch-registry: false
