@@ -21,5 +21,12 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: false # <-- AÑADE ESTO: Evita que intente registrarse
+    register-with-eureka: false
     fetch-registry: false
+
+# Configuración JWT externalizada
+app:
+  jwt:
+    secret: "EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!"
+    access-token-expiration-ms: 3600000    # 1 hora
+    refresh-token-expiration-days: 7       # 7 días
