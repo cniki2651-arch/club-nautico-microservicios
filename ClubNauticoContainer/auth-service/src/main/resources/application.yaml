@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
@@ -7,26 +7,27 @@ spring:
   config:
     import: "optional:configserver:"
   datasource:
-    url: jdbc:postgresql://localhost:5433/club_nautica_auth_db
-    username: postgres
-    password: root
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/club_nautica_auth_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:root}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
     register-with-eureka: false
     fetch-registry: false
 
-# Configuración JWT externalizada
+# Configuración JWT — Todos los valores se leen de variables de entorno
+# Los valores después de ':' son defaults para desarrollo local
 app:
   jwt:
-    secret: "EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!"
-    access-token-expiration-ms: 3600000    # 1 hora
-    refresh-token-expiration-days: 7       # 7 días
+    secret: ${JWT_SECRET:EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
+    access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
+    refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
