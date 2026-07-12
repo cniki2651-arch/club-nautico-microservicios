@@ -3,9 +3,9 @@ const router = express.Router();
 const { verificarToken, autorizarRoles } = require('../middlewares/authMiddleware');
 const { obtenerZarpes, crearZarpe, aprobarZarpe, obtenerZarpePorId } = require('../controllers/zarpesController');
 
-// Protegemos las rutas para que solo el Naviero (3) 
+// Protegemos las rutas para que solo el Naviero (Rol 3) gestione los zarpes
 router.get('/', verificarToken, autorizarRoles(3), obtenerZarpes);
-router.post('/crear', verificarToken, autorizarRoles(3), crearZarpe);
+router.post('/', verificarToken, autorizarRoles(3), crearZarpe);
 router.put('/:id/aprobar', verificarToken, autorizarRoles(3), aprobarZarpe);
 router.get('/:id/documento', verificarToken, autorizarRoles(3), obtenerZarpePorId);
 
