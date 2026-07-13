@@ -1,46 +1,55 @@
 # ═══════════════════════════════════════════════════════════════════
 # STAGE 1 — Builder
-# Compila el proyecto y genera el JAR con Maven
+# Compila el módulo auth-service dentro del proyecto multi-módulo.
+# Build context: ClubNauticoContainer/ (necesario por el pom padre)
 # ═══════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /app
 
-# Copiar descriptor de dependencias primero para aprovechar la caché de capas Docker.
-# Si el pom.xml no cambia, Maven no re-descarga las dependencias en cada build.
+# 1) Copiar el pom agregador (padre) — necesario para resolver
+#    dependencyManagement y versiones heredadas
 COPY pom.xml .
-COPY .mvn/ .mvn/
-COPY mvnw .
 
-# Pre-descargar dependencias (capa cacheada)
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+# 2) Copiar el pom del módulo + wrapper de Maven
+COPY auth-service/pom.xml auth-service/
+COPY auth-service/.mvn/ auth-service/.mvn/
+COPY auth-service/mvnw auth-service/
 
-# Copiar el código fuente y compilar
-COPY src/ src/
+WORKDIR /app/auth-service
+RUN chmod +x mvnw
+
+# 3) Pre-descargar dependencias (capa cacheada).
+#    -N en el padre evita que intente compilar otros módulos que
+#    todavía no existen en este contexto de build.
+WORKDIR /app
+RUN chmod +x auth-service/mvnw
+WORKDIR /app/auth-service
+RUN ./mvnw dependency:go-offline -B
+
+# 4) Copiar el código fuente y compilar SOLO este módulo
+COPY auth-service/src/ src/
 RUN ./mvnw clean package -DskipTests -B
 
 # ═══════════════════════════════════════════════════════════════════
 # STAGE 2 — Runtime
 # Solo el JRE slim + el JAR generado. Sin Maven, sin código fuente.
-# Imagen final: ~180 MB vs ~600 MB sin multi-stage.
 # ═══════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:17-jre-alpine AS runtime
 
-# Usuario no-root por seguridad (best practice en contenedores de producción)
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 WORKDIR /app
 
-# Copiar solo el JAR desde el stage builder
-COPY --from=builder /app/target/*.jar app.jar
+# Ruta ajustada: el JAR quedó en /app/auth-service/target dentro del builder
+COPY --from=builder /app/auth-service/target/*.jar app.jar
 
-# Puerto expuesto (debe coincidir con server.port en application.yaml)
 EXPOSE 8081
 
-# Opciones JVM para contenedores:
-# -XX:+UseContainerSupport    → detecta límites de CPU/RAM del contenedor
-# -XX:MaxRAMPercentage=75.0   → usa max el 75% de la RAM asignada al contenedor
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD wget -q --spider http://localhost:8081/actuator/health || exit 1
+
 ENTRYPOINT ["java", \
             "-XX:+UseContainerSupport", \
             "-XX:MaxRAMPercentage=75.0", \

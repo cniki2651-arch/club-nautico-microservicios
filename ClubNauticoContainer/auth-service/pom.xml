@@ -8,9 +8,9 @@
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 	<groupId>club.ms.auth</groupId>
-	<artifactId>ClubNauticoMSAuth</artifactId>
+	<artifactId>auth-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ClubNauticoMSAuth</name>
+	<name>auth-service</name>
 	<description>Microservicio de autenticación y gestión de identidades (Auth/IAM) del Club Náutico</description>
 
 	<properties>

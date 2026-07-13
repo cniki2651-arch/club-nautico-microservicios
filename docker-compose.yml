@@ -1,0 +1,202 @@
+version: "3"
+
+# ═══════════════════════════════════════════════════════════════════
+# Club Náutico — Microservicios Stack
+# Orquesta los 9 servicios del monorepo (Java/Spring + Node)
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════
+  # AUTH SERVICE
+  # ═══════════════════════════════════════════════════════════════
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: club-nautico-auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${AUTH_DB_NAME:-club_nautica_auth_db}
+      POSTGRES_USER:     ${AUTH_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-root}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-postgres} -d ${AUTH_DB_NAME:-club_nautica_auth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - club-nautico-net
+
+  auth-service:
+    build:
+      context: ./ClubNauticoContainer
+      dockerfile: auth-service/Dockerfile
+    container_name: club-nautico-auth-service
+    restart: unless-stopped
+    ports:
+      - "${AUTH_SERVER_PORT:-8081}:8081"
+    environment:
+      DB_URL:      jdbc:postgresql://postgres-auth:5432/${AUTH_DB_NAME:-club_nautica_auth_db}
+      DB_USERNAME: ${AUTH_DB_USER:-postgres}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD:-root}
+      JWT_SECRET:                  ${JWT_SECRET:-EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
+      JWT_ACCESS_EXPIRATION_MS:    ${JWT_ACCESS_EXPIRATION_MS:-3600000}
+      JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS:-7}
+      SERVER_PORT: 8081
+      JPA_SHOW_SQL: "false"
+      # EUREKA_URL: http://eureka-server:8761/eureka/   # descomentar cuando eureka-server esté listo
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+    networks:
+      - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # EUREKA SERVER —  pendiente
+  # ═══════════════════════════════════════════════════════════════
+  # eureka-server:
+  #   build:
+  #     context: ./ClubNauticoContainer
+  #     dockerfile: eureka-server/Dockerfile
+  #   container_name: club-nautico-eureka
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8761:8761"
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # CONFIG SERVER —  pendiente (club.ms.config)
+  # ═══════════════════════════════════════════════════════════════
+  # config-server:
+  #   build:
+  #     context: ./ClubNauticoContainer
+  #     dockerfile: club.ms.config/Dockerfile
+  #   container_name: club-nautico-config
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8888:8888"
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # MS-SOCIOS —  pendiente
+  # ═══════════════════════════════════════════════════════════════
+  # postgres-socios:
+  #   image: postgres:16-alpine
+  #   container_name: club-nautico-socios-db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB:       ${SOCIOS_DB_NAME:-club_nautica_socios_db}
+  #     POSTGRES_USER:     ${SOCIOS_DB_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${SOCIOS_DB_PASSWORD:-root}
+  #   ports:
+  #     - "5434:5432"
+  #   volumes:
+  #     - postgres_socios_data:/var/lib/postgresql/data
+  #   networks:
+  #     - club-nautico-net
+  #
+  # ms-socios:
+  #   build:
+  #     context: ./ClubNauticoContainer
+  #     dockerfile: ClubNauticoMSSocios/Dockerfile
+  #   container_name: club-nautico-ms-socios
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8082:8082"
+  #   depends_on:
+  #     postgres-socios:
+  #       condition: service_healthy
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # MS-FACTURACION —  pendiente (lo estás haciendo tú)
+  # ═══════════════════════════════════════════════════════════════
+  # postgres-facturacion:
+  #   image: postgres:16-alpine
+  #   container_name: club-nautico-facturacion-db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB:       ${FACTURACION_DB_NAME:-club_nautica_facturacion_db}
+  #     POSTGRES_USER:     ${FACTURACION_DB_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${FACTURACION_DB_PASSWORD:-root}
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - postgres_facturacion_data:/var/lib/postgresql/data
+  #   networks:
+  #     - club-nautico-net
+  #
+  # ms-facturacion:
+  #   build:
+  #     context: ./ClubNauticoContainer
+  #     dockerfile: ms-facturacion/Dockerfile
+  #   container_name: club-nautico-ms-facturacion
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8083:8083"
+  #   depends_on:
+  #     postgres-facturacion:
+  #       condition: service_healthy
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # MS-NAUTICA —  pendiente (Node, fuera de ClubNauticoContainer)
+  # ═══════════════════════════════════════════════════════════════
+  # ms-nautica:
+  #   build:
+  #     context: ./club-nautico-ms-nautica
+  #     dockerfile: Dockerfile
+  #   container_name: club-nautico-ms-nautica
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8084:8084"
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # API GATEWAY —  pendiente (Node, compañeros)
+  # ═══════════════════════════════════════════════════════════════
+  # api-gateway:
+  #   build:
+  #     context: ./api-gateway
+  #     dockerfile: Dockerfile
+  #   container_name: club-nautico-api-gateway
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # NOTIFICACIONES —  pendiente (Node, compañeros)
+  # ═══════════════════════════════════════════════════════════════
+  # notificaciones:
+  #   build:
+  #     context: ./notificaciones
+  #     dockerfile: Dockerfile
+  #   container_name: club-nautico-notificaciones
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8085:8085"
+  #   networks:
+  #     - club-nautico-net
+
+volumes:
+  postgres_auth_data:
+    driver: local
+  # postgres_socios_data:
+  #   driver: local
+  # postgres_facturacion_data:
+  #   driver: local
+
+networks:
+  club-nautico-net:
+    driver: bridge
