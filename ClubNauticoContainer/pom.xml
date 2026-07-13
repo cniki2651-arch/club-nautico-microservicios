@@ -46,8 +46,8 @@
     <modules>
         <module>club.ms.config</module>
         <module>club.ms.eureka</module>
+        <module>auth-service</module>
         <module>ClubNauticoMSSocios</module>
-        <!-- <module>ms-facturacion</module> -->
-        <!-- <module>auth-service</module> -->
+
     </modules>
 </project>
