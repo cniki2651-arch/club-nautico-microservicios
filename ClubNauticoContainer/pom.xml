@@ -45,9 +45,8 @@
 
     <modules>
         <module>club.ms.config</module>
+        <module>club.ms.eureka</module>
         <module>ClubNauticoMSSocios</module>
-        <!-- Se agregan aqui conforme se van creando: -->
-        <!-- <module>eureka-server</module> -->
         <!-- <module>ms-facturacion</module> -->
         <!-- <module>auth-service</module> -->
     </modules>
