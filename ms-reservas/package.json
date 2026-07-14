@@ -1,0 +1,26 @@
+{
+  "name": "ms-reservas",
+  "version": "1.0.0",
+  "description": "Microservicio de gestión de recursos y reservas para Club Náutico",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Club Náutico Team",
+  "license": "ISC"
+}
