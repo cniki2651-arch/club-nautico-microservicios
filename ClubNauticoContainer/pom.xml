@@ -48,6 +48,7 @@
         <module>club.ms.eureka</module>
         <module>auth-service</module>
         <module>ClubNauticoMSSocios</module>
+        <module>club.ms.facturacion</module>
 
     </modules>
 </project>
