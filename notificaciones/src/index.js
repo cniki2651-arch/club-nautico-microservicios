@@ -7,17 +7,17 @@
 
 require('dotenv').config();
 
-const express    = require('express');
-const amqp       = require('amqplib');
+const express = require('express');
+const amqp = require('amqplib');
 const eurekaClient = require('./eureka');
 
 // ── Configuración ──────────────────────────────────────────────────────────
-const PORT           = parseInt(process.env.PORT  || '8086', 10);
-const RABBITMQ_URL   = process.env.RABBITMQ_URL   || 'amqp://guest:guest@localhost:5672';
-const QUEUE_NAME     = process.env.RABBITMQ_QUEUE || 'nautica_events';
+const PORT = parseInt(process.env.PORT || '8086', 10);
+const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672';
+const QUEUE_NAME = process.env.RABBITMQ_QUEUE || 'nautica_events';
 
 // Reintentos de conexión a RabbitMQ
-const MAX_RETRIES    = 10;
+const MAX_RETRIES = 10;
 const RETRY_DELAY_MS = 5000;
 
 // ── 1. Servidor Express — Health Check ────────────────────────────────────
@@ -31,8 +31,8 @@ app.use(express.json());
  */
 app.get('/health', (_req, res) => {
   res.status(200).json({
-    status:    'UP',
-    service:   'ms-notificaciones',
+    status: 'UP',
+    service: 'ms-notificaciones',
     timestamp: new Date().toISOString(),
   });
 });
@@ -49,26 +49,36 @@ app.listen(PORT, () => {
  * @param {object} evento - Payload del mensaje de RabbitMQ
  */
 function simularEnvioCorreo(evento) {
-  const { tipo, datos } = evento;
+  // 1. Mapeo inteligente: extraemos el tipo y el resto lo metemos en 'datos'
+  const tipo = evento.evento || 'DESCONOCIDO';
+  const datos = {
+    embarcacion: evento.embarcacion_id,
+    destino: evento.destino || 'No especificado',
+    reservaId: evento.reservaId,
+    fecha: evento.fecha,
+    nombre: evento.nombre,
+    socioId: evento.socioId
+  };
 
+  // 2. Definición de plantillas (esto se mantiene igual)
   const plantillas = {
     ZARPE_REGISTRADO: {
-      asunto:  '⚓ Zarpe registrado — Club Náutico',
-      cuerpo:  `Se ha registrado el zarpe de la embarcación ${datos?.embarcacion || 'N/A'} con destino ${datos?.destino || 'N/A'}.`,
+      asunto: '⚓ Zarpe registrado — Club Náutico',
+      cuerpo: `Se ha registrado el zarpe de la embarcación ${datos.embarcacion} con destino ${datos.destino}.`,
     },
     RESERVA_CONFIRMADA: {
-      asunto:  '📅 Reserva confirmada — Club Náutico',
-      cuerpo:  `Su reserva #${datos?.reservaId || 'N/A'} ha sido confirmada para el ${datos?.fecha || 'N/A'}.`,
+      asunto: '📅 Reserva confirmada — Club Náutico',
+      cuerpo: `Su reserva #${datos.reservaId} ha sido confirmada para el ${datos.fecha}.`,
     },
     SOCIO_REGISTRADO: {
-      asunto:  '🎉 Bienvenido al Club Náutico',
-      cuerpo:  `Bienvenido, ${datos?.nombre || 'estimado socio'}. Su número de socio es ${datos?.socioId || 'N/A'}.`,
+      asunto: '🎉 Bienvenido al Club Náutico',
+      cuerpo: `Bienvenido, ${datos.nombre}. Su número de socio es ${datos.socioId}.`,
     },
   };
 
   const plantilla = plantillas[tipo] || {
-    asunto: `📢 Evento: ${tipo}`,
-    cuerpo: `Se recibió el evento "${tipo}" con datos: ${JSON.stringify(datos)}`,
+    asunto: `📢 Evento recibido: ${tipo}`,
+    cuerpo: `Detalles: ${JSON.stringify(datos)}`,
   };
 
   console.log('─'.repeat(60));
@@ -76,7 +86,6 @@ function simularEnvioCorreo(evento) {
   console.log(`  Para:    socio@clubnautico.com`);
   console.log(`  Asunto:  ${plantilla.asunto}`);
   console.log(`  Cuerpo:  ${plantilla.cuerpo}`);
-  console.log(`  Evento:  ${JSON.stringify(evento)}`);
   console.log('─'.repeat(60));
 }
 
@@ -93,7 +102,7 @@ async function conectarYConsumir(intentoActual = 1) {
 
     // Establecer conexión y canal
     const connection = await amqp.connect(RABBITMQ_URL);
-    const channel    = await connection.createChannel();
+    const channel = await connection.createChannel();
 
     // Asegurar que la cola exista (idempotente — la crea si no existe)
     await channel.assertQueue(QUEUE_NAME, { durable: true });
@@ -119,7 +128,7 @@ async function conectarYConsumir(intentoActual = 1) {
 
       try {
         const contenido = msg.content.toString();
-        const evento    = JSON.parse(contenido);
+        const evento = JSON.parse(contenido);
 
         console.log(`[NOTIFICACIONES] 📩 Evento recibido:`, JSON.stringify(evento, null, 2));
 
@@ -175,4 +184,4 @@ const shutdown = async () => {
 };
 
 process.on('SIGTERM', shutdown);
-process.on('SIGINT',  shutdown);
+process.on('SIGINT', shutdown);
