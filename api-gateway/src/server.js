@@ -97,6 +97,7 @@ app.use('/api/socios', createSociosProxy());
 app.use('/api/nautica', createNauticaProxy());
 app.use('/api/facturacion', createFacturacionProxy());
 app.use('/api/reservas', createReservasProxy());
+app.use('/api/recursos', createReservasProxy());
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Manejador de rutas no encontradas (404)
