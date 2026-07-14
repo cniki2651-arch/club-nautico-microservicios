@@ -12,9 +12,10 @@ WORKDIR /app
 COPY pom.xml .
 
 # 2) Copiar el pom del módulo + wrapper de Maven
-# COPY auth-service/pom.xml auth-service/
-# COPY auth-service/.mvn/ auth-service/.mvn/
-# COPY auth-service/mvnw auth-service/
+COPY pom.xml .
+COPY .mvn/ .mvn/
+COPY mvnw .
+COPY src/ src/
 
 WORKDIR /app/auth-service
 RUN chmod +x mvnw
