@@ -12,9 +12,9 @@ WORKDIR /app
 COPY pom.xml .
 
 # 2) Copiar el pom del módulo + wrapper de Maven
-COPY auth-service/pom.xml auth-service/
-COPY auth-service/.mvn/ auth-service/.mvn/
-COPY auth-service/mvnw auth-service/
+# COPY auth-service/pom.xml auth-service/
+# COPY auth-service/.mvn/ auth-service/.mvn/
+# COPY auth-service/mvnw auth-service/
 
 WORKDIR /app/auth-service
 RUN chmod +x mvnw
@@ -49,6 +49,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD wget -q --spider http://localhost:8081/actuator/health || exit 1
 
 ENTRYPOINT ["java", \
-            "-XX:+UseContainerSupport", \
-            "-XX:MaxRAMPercentage=75.0", \
-            "-jar", "app.jar"]
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-jar", "app.jar"]
