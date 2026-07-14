@@ -1,38 +1,31 @@
 # ═══════════════════════════════════════════════════════════════════
 # STAGE 1 — Builder
 # Compila el módulo auth-service dentro del proyecto multi-módulo.
-# Build context: ClubNauticoContainer/ (necesario por el pom padre)
 # ═══════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-# 1) Copiar el pom agregador (padre) — necesario para resolver
-#    dependencyManagement y versiones heredadas
-COPY pom.xml .
+# 1) Copiar el pom agregador (padre) y recursos de la raíz
+COPY ClubNauticoContainer/pom.xml .
+COPY ClubNauticoContainer/.mvn/ .mvn/
+COPY ClubNauticoContainer/mvnw .
 
-# 2) Copiar el pom del módulo + wrapper de Maven
-COPY pom.xml .
-COPY .mvn/ .mvn/
-COPY mvnw .
-COPY src/ src/
+# 2) Copiar el pom del módulo auth-service
+COPY ClubNauticoContainer/auth-service/pom.xml auth-service/
 
-WORKDIR /app/auth-service
+# Dar permisos de ejecución al wrapper
 RUN chmod +x mvnw
 
 # 3) Pre-descargar dependencias (capa cacheada).
-WORKDIR /app
-RUN chmod +x auth-service/mvnw
-WORKDIR /app/auth-service
 RUN ./mvnw dependency:go-offline -B
 
 # 4) Copiar el código fuente y compilar SOLO este módulo
-COPY auth-service/src/ src/
-RUN ./mvnw clean package -DskipTests -B
+COPY ClubNauticoContainer/auth-service/src/ auth-service/src/
+RUN ./mvnw clean package  -pl auth-service -am -DskipTests -B
 
 # ═══════════════════════════════════════════════════════════════════
 # STAGE 2 — Runtime
-# Solo el JRE slim + el JAR generado. Sin Maven, sin código fuente.
 # ═══════════════════════════════════════════════════════════════════
 FROM eclipse-temurin:21-jre-alpine
 
@@ -41,7 +34,7 @@ USER appuser
 
 WORKDIR /app
 
-# Ruta ajustada: el JAR quedó en /app/auth-service/target dentro del builder
+# Copiamos el JAR generado en el submódulo
 COPY --from=builder /app/auth-service/target/*.jar app.jar
 
 EXPOSE 8081
