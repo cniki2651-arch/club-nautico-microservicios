@@ -2,7 +2,8 @@ version: "3"
 
 # ═══════════════════════════════════════════════════════════════════
 # Club Náutico — Microservicios Stack
-# Orquesta los 9 servicios del monorepo (Java/Spring + Node)
+# Orquesta los servicios del monorepo (Java/Spring + Node)
+# Servicios activos: auth, ms-reservas, rabbitmq, notificaciones
 # ═══════════════════════════════════════════════════════════════════
 
 services:
@@ -195,21 +196,64 @@ services:
       - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # NOTIFICACIONES —  pendiente (Node, compañeros)
+  # RABBITMQ — Message Broker (AMQP)
+  # Management UI: http://localhost:15672  (guest/guest)
   # ═══════════════════════════════════════════════════════════════
-  # notificaciones:
-  #   build:
-  #     context: ./notificaciones
-  #     dockerfile: Dockerfile
-  #   container_name: club-nautico-notificaciones
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8086:8086"
-  #   networks:
-  #     - club-nautico-net
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: club-nautico-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
+    networks:
+      - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
+  # MS-NOTIFICACIONES — Consumidor asíncrono de RabbitMQ
+  # Health: http://localhost:8086/health
+  # ═══════════════════════════════════════════════════════════════
+  notificaciones:
+    build:
+      context: ./notificaciones
+      dockerfile: Dockerfile
+    container_name: club-nautico-notificaciones
+    restart: unless-stopped
+    ports:
+      - "${NOTIFICACIONES_PORT:-8086}:8086"
+    environment:
+      PORT: 8086
+      NODE_ENV: production
+      RABBITMQ_URL:   amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-nautica_events}
+      # Eureka (descomentar cuando eureka-server esté activo)
+      # EUREKA_HOST:    eureka-server
+      # EUREKA_PORT:    8761
+      EUREKA_ENABLED: "false"
+      SERVICE_HOST:   notificaciones
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      # eureka-server:   # descomentar cuando esté disponible
+      #   condition: service_healthy
+    networks:
+      - club-nautico-net
 
 volumes:
   postgres_auth_data:
+    driver: local
+  rabbitmq_data:
     driver: local
   # postgres_socios_data:
   #   driver: local

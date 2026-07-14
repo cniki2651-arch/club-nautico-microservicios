@@ -1,0 +1,137 @@
+# =============================================================================
+#  RabbitMQ — Kubernetes Manifests
+#  Incluye: PersistentVolumeClaim, Deployment y Service
+# =============================================================================
+
+---
+# ── PersistentVolumeClaim: datos de RabbitMQ ─────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rabbitmq-pvc
+  namespace: default
+  labels:
+    app: rabbitmq
+    component: message-broker
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# ── Deployment ────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+  namespace: default
+  labels:
+    app: rabbitmq
+    component: message-broker
+spec:
+  replicas: 1   # RabbitMQ con un solo nodo (para desarrollo/staging)
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+        component: message-broker
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.13-management-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: amqp
+              containerPort: 5672
+              protocol: TCP
+            - name: management
+              containerPort: 15672
+              protocol: TCP
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
+          # Liveness: el proceso responde
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "status"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          # Readiness: el puerto AMQP acepta conexiones
+          readinessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "check_port_connectivity"]
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+      volumes:
+        - name: rabbitmq-data
+          persistentVolumeClaim:
+            claimName: rabbitmq-pvc
+
+---
+# ── Service ────────────────────────────────────────────────────────────────────
+# ClusterIP: el broker solo es accesible dentro del clúster
+# para acceder a la Management UI en desarrollo, usar: kubectl port-forward svc/rabbitmq 15672:15672
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: default
+  labels:
+    app: rabbitmq
+    component: message-broker
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+      protocol: TCP
+    - name: management
+      port: 15672
+      targetPort: 15672
+      protocol: TCP
+  type: ClusterIP
+
+---
+# ── Secret: credenciales de RabbitMQ ─────────────────────────────────────────
+# IMPORTANTE: En producción usar un gestor de secretos (Vault, Sealed Secrets, etc.)
+# Los valores son Base64 de "guest" (solo para desarrollo)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq-secret
+  namespace: default
+  labels:
+    app: rabbitmq
+type: Opaque
+data:
+  username: Z3Vlc3Q=   # echo -n "guest" | base64
+  password: Z3Vlc3Q=   # echo -n "guest" | base64
