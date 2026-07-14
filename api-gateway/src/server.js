@@ -4,16 +4,32 @@
 require('dotenv').config();
 
 const express = require('express');
-const cors    = require('cors');
+const cors = require('cors');
 
 const requestLogger = require('./middlewares/requestLogger');
 const authMiddleware = require('./middlewares/authMiddleware');
-const { createAuthProxy } = require('./routes/proxyRoutes');
+
+// Importamos todos los generadores de proxy de tu módulo de rutas
+const {
+  createAuthProxy,
+  createSociosProxy,
+  createNauticaProxy,
+  createFacturacionProxy,
+  createReservasProxy
+} = require('./routes/proxyRoutes');
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Validación de variables críticas al arrancar
 // ══════════════════════════════════════════════════════════════════════════
-const REQUIRED_ENV = ['JWT_SECRET', 'AUTH_SERVICE_URL'];
+const REQUIRED_ENV = [
+  'JWT_SECRET',
+  'AUTH_SERVICE_URL',
+  'SOCIOS_SERVICE_URL',
+  'NAUTICA_SERVICE_URL',
+  'FACTURACION_SERVICE_URL',
+  'RESERVAS_SERVICE_URL'
+];
+
 REQUIRED_ENV.forEach((key) => {
   if (!process.env[key]) {
     console.error(`[FATAL] La variable de entorno "${key}" es obligatoria pero no está definida.`);
@@ -30,7 +46,6 @@ const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:30
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Permite peticiones sin origen (Postman, curl, server-to-server)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -41,7 +56,7 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Authorization'],
   credentials: true,
-  optionsSuccessStatus: 204, // compatibilidad con navegadores legacy
+  optionsSuccessStatus: 204,
 };
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -49,14 +64,12 @@ const corsOptions = {
 // ══════════════════════════════════════════════════════════════════════════
 const app = express();
 
-// ── Middlewares globales ─────────────────────────────────────────────────
 app.use(cors(corsOptions));          // ① CORS antes de todo
 app.use(requestLogger);              // ② Logging de cada petición
 app.use(authMiddleware);             // ③ Validación JWT (bypass en rutas públicas)
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Health-check propio del Gateway
-//  Endpoint: GET /health
 // ══════════════════════════════════════════════════════════════════════════
 app.get('/health', (_req, res) => {
   res.status(200).json({
@@ -67,32 +80,22 @@ app.get('/health', (_req, res) => {
     uptime: `${Math.floor(process.uptime())}s`,
     targets: {
       authService: process.env.AUTH_SERVICE_URL,
-      // sociosService: process.env.SOCIOS_SERVICE_URL,
+      sociosService: process.env.SOCIOS_SERVICE_URL,
+      nauticaService: process.env.NAUTICA_SERVICE_URL,
+      facturacionService: process.env.FACTURACION_SERVICE_URL,
+      reservasService: process.env.RESERVAS_SERVICE_URL,
     },
   });
 });
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Rutas de Proxy
-//
-//  ▶ /auth/**  →  Auth Service  (puerto 8081)
-//  Todos los endpoints del MS de autenticación quedan disponibles bajo /auth/
-//  Ejemplos:
-//    POST /auth/login      → POST http://auth-service:8081/auth/login
-//    POST /auth/register   → POST http://auth-service:8081/auth/register
-//    POST /auth/refresh    → POST http://auth-service:8081/auth/refresh
 // ══════════════════════════════════════════════════════════════════════════
 app.use('/auth', createAuthProxy());
-
-// ── FUTUROS MICROSERVICIOS (descomentar al integrar) ─────────────────────
-
-// ▶ /api/socios/**  →  Socios Service  (puerto 8082)
-// const { createSociosProxy } = require('./routes/proxyRoutes');
-// app.use('/api/socios', createSociosProxy());
-
-// ▶ /api/nautica/**  →  Náutica Service  (puerto 8083)
-// const { createNauticaProxy } = require('./routes/proxyRoutes');
-// app.use('/api/nautica', createNauticaProxy());
+app.use('/api/socios', createSociosProxy());
+app.use('/api/nautica', createNauticaProxy());
+app.use('/api/facturacion', createFacturacionProxy());
+app.use('/api/reservas', createReservasProxy());
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Manejador de rutas no encontradas (404)
@@ -109,9 +112,7 @@ app.use((_req, res) => {
 // ══════════════════════════════════════════════════════════════════════════
 //  Manejador global de errores
 // ══════════════════════════════════════════════════════════════════════════
-// eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  // Errores de CORS emitidos por el callback de corsOptions
   if (err.message?.startsWith('CORS:')) {
     return res.status(403).json({
       status: 403,
@@ -140,11 +141,17 @@ app.listen(PORT, () => {
   console.log('  ╔══════════════════════════════════════════════════╗');
   console.log('  ║       Club Náutico · API Gateway · Activo        ║');
   console.log('  ╠══════════════════════════════════════════════════╣');
-  console.log(`  ║  Puerto     : ${PORT}                               ║`);
-  console.log(`  ║  Entorno    : ${(process.env.NODE_ENV || 'development').padEnd(30)}  ║`);
-  console.log(`  ║  Auth MS    : ${(process.env.AUTH_SERVICE_URL || '').padEnd(30)}  ║`);
+  console.log(`  ║  Puerto     : ${PORT.toString().padEnd(30)} ║`);
+  console.log(`  ║  Entorno    : ${(process.env.NODE_ENV || 'development').padEnd(30)} ║`);
+  console.log('  ╠══════════════════════════════════════════════════╣');
+  console.log('  ║  Rutas Mapeadas:                                 ║');
+  console.log(`  ║  ▶ Auth        -> ${process.env.AUTH_SERVICE_URL.padEnd(27)} ║`);
+  console.log(`  ║  ▶ Socios      -> ${process.env.SOCIOS_SERVICE_URL.padEnd(27)} ║`);
+  console.log(`  ║  ▶ Nautica     -> ${process.env.NAUTICA_SERVICE_URL.padEnd(27)} ║`);
+  console.log(`  ║  ▶ Facturacion -> ${process.env.FACTURACION_SERVICE_URL.padEnd(27)} ║`);
+  console.log(`  ║  ▶ Reservas    -> ${process.env.RESERVAS_SERVICE_URL.padEnd(27)} ║`);
   console.log('  ╚══════════════════════════════════════════════════╝');
   console.log('');
 });
 
-module.exports = app; // exportado para pruebas unitarias
+module.exports = app;
