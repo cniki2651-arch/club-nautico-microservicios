@@ -5,28 +5,28 @@ metadata:
     kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
     kompose.version: 1.38.0 (a8f5d1cbd)
   labels:
-    io.kompose.service: ms-nautica
-  name: ms-nautica
+    io.kompose.service: ms-reservas
+  name: ms-reservas
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: ms-nautica
+      io.kompose.service: ms-reservas
   template:
     metadata:
       annotations:
         kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
         kompose.version: 1.38.0 (a8f5d1cbd)
       labels:
-        io.kompose.service: ms-nautica
+        io.kompose.service: ms-reservas
     spec:
       containers:
         - envFrom:
             - configMapRef:
-                name: club-nautico-ms-nautica--env
-          image: ms-nautica
-          name: club-nautico-ms-nautica
+                name: ms-reservas--env
+          image: ms-reservas
+          name: club-nautico-ms-reservas
           ports:
-            - containerPort: 3002
+            - containerPort: 8085
               protocol: TCP
       restartPolicy: Always

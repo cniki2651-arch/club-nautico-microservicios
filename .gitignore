@@ -47,3 +47,7 @@ application-local.yml
 application-local.yaml
 
 kompose.exe
+
+k8s/api-gateway--env-configmap.yaml
+k8s/ms-reservas--env-configmap.yaml
+k8s/club-nautico-ms-nautica--env-configmap.yaml

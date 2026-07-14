@@ -5,12 +5,12 @@ metadata:
     kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
     kompose.version: 1.38.0 (a8f5d1cbd)
   labels:
-    io.kompose.service: ms-nautica
-  name: ms-nautica
+    io.kompose.service: ms-reservas
+  name: ms-reservas
 spec:
   ports:
-    - name: "8083"
-      port: 8083
-      targetPort: 3002
+    - name: "8085"
+      port: 8085
+      targetPort: 8085
   selector:
-    io.kompose.service: ms-nautica
+    io.kompose.service: ms-reservas

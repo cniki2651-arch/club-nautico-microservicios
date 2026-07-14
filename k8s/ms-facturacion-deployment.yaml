@@ -25,7 +25,7 @@ spec:
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: http://eureka-server:8761/eureka/
             - name: SERVER_PORT
-              value: "8083"
+              value: "8084"
             - name: SPRING_CONFIG_IMPORT
               value: optional:configserver:http://config-server:8888
             - name: SPRING_DATASOURCE_PASSWORD
@@ -37,6 +37,6 @@ spec:
           image: ms-facturacion
           name: club-nautico-ms-facturacion
           ports:
-            - containerPort: 8083
+            - containerPort: 8084
               protocol: TCP
       restartPolicy: Always
