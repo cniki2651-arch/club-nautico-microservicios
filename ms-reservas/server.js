@@ -8,6 +8,10 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/db');
 
+// ── Swagger / OpenAPI ─────────────────────────────────────────────────────────
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./src/config/swagger');
+
 // ── Importar rutas ────────────────────────────────────────────────────────────
 const recursoRoutes = require('./src/routes/recursoRoutes');
 const reservaRoutes = require('./src/routes/reservaRoutes');
@@ -26,6 +30,21 @@ app.use(
 );
 app.use(express.json()); // Parsea cuerpos con Content-Type: application/json
 app.use(express.urlencoded({ extended: true })); // Parsea cuerpos URL-encoded
+
+// ── Documentación OpenAPI (Swagger UI) ───────────────────────────────────────
+// Disponible en: http://localhost:8085/api-docs
+// El botón "Authorize" acepta el JWT emitido por el auth-service.
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'MS-Reservas · Club Náutico API',
+    swaggerOptions: {
+      persistAuthorization: true, // Mantiene el token al recargar la página
+      filter: true,               // Habilita el buscador de endpoints
+    },
+  })
+);
 
 // ── Rutas de la API ───────────────────────────────────────────────────────────
 app.use('/api/recursos', recursoRoutes);
@@ -55,6 +74,7 @@ app.get('/', (req, res) => {
         recursos: '/api/recursos',
         reservas: '/api/reservas',
         health: '/health',
+        docs: '/api-docs',
       },
     },
     error: null,
@@ -88,7 +108,8 @@ const startServer = async () => {
     console.log('════════════════════════════════════════════════');
     console.log(`🚢  MS-Reservas corriendo en el puerto ${PORT}`);
     console.log(`📦  Entorno: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗  http://localhost:${PORT}`);
+    console.log(`🔗  API:  http://localhost:${PORT}`);
+    console.log(`📖  Docs: http://localhost:${PORT}/api-docs`);
     console.log('════════════════════════════════════════════════');
   });
 };

@@ -78,11 +78,18 @@ app.get('/health', (_req, res) => {
     timestamp: new Date().toISOString(),
     uptime: `${Math.floor(process.uptime())}s`,
     targets: {
-      authService: process.env.AUTH_SERVICE_URL,
-      sociosService: process.env.SOCIOS_SERVICE_URL,
-      nauticaService: process.env.NAUTICA_SERVICE_URL,
-      facturacionService: process.env.FACTURACION_SERVICE_URL,
-      reservasService: process.env.RESERVAS_SERVICE_URL,
+      authService:       process.env.AUTH_SERVICE_URL,
+      sociosService:     process.env.SOCIOS_SERVICE_URL,
+      nauticaService:    process.env.NAUTICA_SERVICE_URL,
+      facturacionService:process.env.FACTURACION_SERVICE_URL,
+      reservasService:   process.env.RESERVAS_SERVICE_URL,
+    },
+    docs: {
+      auth: `${process.env.AUTH_SERVICE_URL}/api-docs`,
+      socios: `${process.env.SOCIOS_SERVICE_URL}/api-docs`,
+      nautica: `${process.env.NAUTICA_SERVICE_URL}/api-docs`,
+      facturacion: `${process.env.FACTURACION_SERVICE_URL}/api-docs`,
+      reservas: `${process.env.RESERVAS_SERVICE_URL}/api-docs`,
     },
   });
 });
