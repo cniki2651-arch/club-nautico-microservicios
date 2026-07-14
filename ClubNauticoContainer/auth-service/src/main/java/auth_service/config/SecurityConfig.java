@@ -33,29 +33,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**", "/error").permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(exception -> exception
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    var auth = SecurityContextHolder.getContext().getAuthentication();
-                    System.out.println("[ACCESS DENIED] Auth: " + auth);
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                })
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write(
-                        "{\"status\": 401, \"error\": \"No autenticado. Incluye el header Authorization: Bearer <token>\"}"
-                    );
-                })
-            )
-            .build();
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/**", "/error", "/actuator/health/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            var auth = SecurityContextHolder.getContext().getAuthentication();
+                            System.out.println("[ACCESS DENIED] Auth: " + auth);
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        })
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    "{\"status\": 401, \"error\": \"No autenticado. Incluye el header Authorization: Bearer <token>\"}"
+                            );
+                        })
+                )
+                .build();
     }
 
     /**
@@ -68,8 +68,8 @@ public class SecurityConfig {
 
         // Orígenes permitidos (frontend React)
         config.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://localhost:5173"
+                "http://localhost:3000",
+                "http://localhost:5173"
         ));
 
         // Métodos HTTP permitidos
