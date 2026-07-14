@@ -3,7 +3,7 @@
 # Compila el módulo auth-service dentro del proyecto multi-módulo.
 # Build context: ClubNauticoContainer/ (necesario por el pom padre)
 # ═══════════════════════════════════════════════════════════════════
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -20,8 +20,6 @@ WORKDIR /app/auth-service
 RUN chmod +x mvnw
 
 # 3) Pre-descargar dependencias (capa cacheada).
-#    -N en el padre evita que intente compilar otros módulos que
-#    todavía no existen en este contexto de build.
 WORKDIR /app
 RUN chmod +x auth-service/mvnw
 WORKDIR /app/auth-service
@@ -35,7 +33,7 @@ RUN ./mvnw clean package -DskipTests -B
 # STAGE 2 — Runtime
 # Solo el JRE slim + el JAR generado. Sin Maven, sin código fuente.
 # ═══════════════════════════════════════════════════════════════════
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
