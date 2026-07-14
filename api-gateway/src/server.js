@@ -66,7 +66,6 @@ const app = express();
 
 app.use(cors(corsOptions));          // ① CORS antes de todo
 app.use(requestLogger);              // ② Logging de cada petición
-app.use(authMiddleware);             // ③ Validación JWT (bypass en rutas públicas)
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Health-check propio del Gateway
@@ -87,6 +86,8 @@ app.get('/health', (_req, res) => {
     },
   });
 });
+
+app.use(authMiddleware);             // ③ Validación JWT (bypass en rutas públicas)
 
 // ══════════════════════════════════════════════════════════════════════════
 //  Rutas de Proxy
