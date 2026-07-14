@@ -176,6 +176,25 @@ services:
   #     - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
+  # MS-RESERVAS — Node.js + MongoDB Atlas
+  # ═══════════════════════════════════════════════════════════════
+  ms-reservas:
+    build:
+      context: ./ms-reservas
+      dockerfile: Dockerfile
+    container_name: club-nautico-ms-reservas
+    restart: unless-stopped
+    ports:
+      - "${RESERVAS_PORT:-8085}:8085"
+    environment:
+      PORT: 8085
+      NODE_ENV: production
+      MONGO_URI: ${RESERVAS_MONGO_URI}
+      CORS_ORIGIN: ${RESERVAS_CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}
+    networks:
+      - club-nautico-net
+
+  # ═══════════════════════════════════════════════════════════════
   # NOTIFICACIONES —  pendiente (Node, compañeros)
   # ═══════════════════════════════════════════════════════════════
   # notificaciones:
@@ -185,7 +204,7 @@ services:
   #   container_name: club-nautico-notificaciones
   #   restart: unless-stopped
   #   ports:
-  #     - "8085:8085"
+  #     - "8086:8086"
   #   networks:
   #     - club-nautico-net
 
