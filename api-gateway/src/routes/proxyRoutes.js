@@ -3,89 +3,147 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // ══════════════════════════════════════════════════════════════════════════
-//  Configuración del proxy hacia el Auth Service
-//
-//  target  → URL base del microservicio (leída desde .env)
-//  changeOrigin → ajusta el header Host para que el MS lo acepte
-//  on.proxyReq → hook para agregar headers adicionales al request
-//                que llega al microservicio (ej. X-Gateway-Source)
-//  on.error    → manejo centralizado de errores de conectividad
+//  1. Auth Service
 // ══════════════════════════════════════════════════════════════════════════
-
-/**
- * Crea y exporta el proxy middleware del servicio de autenticación.
- * Se monta en la ruta /auth en server.js.
- *
- * @returns {import('http-proxy-middleware').RequestHandler}
- */
 function createAuthProxy() {
   const target = process.env.AUTH_SERVICE_URL;
-
-  if (!target) {
-    throw new Error('AUTH_SERVICE_URL no está definida.');
-  }
+  if (!target) throw new Error('AUTH_SERVICE_URL no está definida.');
 
   return createProxyMiddleware({
     target,
     changeOrigin: true,
-    // 👇 ESTA ES LA MAGIA: Obligamos a que use la ruta original completa (/auth/login)
-    pathRewrite: (path, req) => {
-      return req.originalUrl;
-    },
+    pathRewrite: (path, req) => req.originalUrl,
     on: {
       proxyReq: (proxyReq, req) => {
-        // 👇 Nuestro micrófono para confirmar a dónde está yendo
-        console.log(`[Proxy] 🚀 Disparando hacia Java: ${proxyReq.method} ${target}${req.originalUrl}`);
-
+        console.log(`[Proxy] 🚀 Disparando hacia Auth: ${proxyReq.method} ${target}${req.originalUrl}`);
         proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
-
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         proxyReq.setHeader('X-Forwarded-For', clientIp);
-
-        if (req.user?.sub) {
-          proxyReq.setHeader('X-User-Id', req.user.sub);
-        }
+        if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
       },
       error: (err, req, res) => {
         console.error(`[AuthProxy] Error: ${err.message}`);
-        res.status(502).json({ error: 'Bad Gateway' });
+        res.status(502).json({ error: 'Bad Gateway', message: 'Auth Service no disponible.' });
       },
     },
   });
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  FUTUROS MICROSERVICIOS — Descomentar cuando estén disponibles
+//  2. Socios Service
 // ══════════════════════════════════════════════════════════════════════════
+function createSociosProxy() {
+  const target = process.env.SOCIOS_SERVICE_URL;
+  if (!target) throw new Error('SOCIOS_SERVICE_URL no está definida.');
 
-// function createSociosProxy() {
-//   const target = process.env.SOCIOS_SERVICE_URL;
-//   if (!target) throw new Error('SOCIOS_SERVICE_URL no está definida.');
-//   return createProxyMiddleware({
-//     target,
-//     changeOrigin: true,
-//     on: {
-//       proxyReq: (proxyReq, req) => {
-//         proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
-//         if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
-//       },
-//       error: (err, req, res) => {
-//         console.error(`[SociosProxy] Error · ${err.message}`);
-//         res.status(502).json({ status: 502, error: 'Bad Gateway', message: 'Socios Service no disponible.' });
-//       },
-//     },
-//   });
-// }
+  return createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: (path, req) => req.originalUrl,
+    on: {
+      proxyReq: (proxyReq, req) => {
+        console.log(`[Proxy] 🚀 Disparando hacia Socios: ${proxyReq.method} ${target}${req.originalUrl}`);
+        proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        proxyReq.setHeader('X-Forwarded-For', clientIp);
+        if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
+      },
+      error: (err, req, res) => {
+        console.error(`[SociosProxy] Error: ${err.message}`);
+        res.status(502).json({ error: 'Bad Gateway', message: 'Socios Service no disponible.' });
+      },
+    },
+  });
+}
 
-// function createNauticaProxy() {
-//   const target = process.env.NAUTICA_SERVICE_URL;
-//   if (!target) throw new Error('NAUTICA_SERVICE_URL no está definida.');
-//   return createProxyMiddleware({
-//     target,
-//     changeOrigin: true,
-//     on: { /* igual que los anteriores */ },
-//   });
-// }
+// ══════════════════════════════════════════════════════════════════════════
+//  3. Náutica Service
+// ══════════════════════════════════════════════════════════════════════════
+function createNauticaProxy() {
+  const target = process.env.NAUTICA_SERVICE_URL;
+  if (!target) throw new Error('NAUTICA_SERVICE_URL no está definida.');
 
-module.exports = { createAuthProxy };
-// module.exports = { createAuthProxy, createSociosProxy, createNauticaProxy };
+  return createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: (path, req) => req.originalUrl,
+    on: {
+      proxyReq: (proxyReq, req) => {
+        console.log(`[Proxy] 🚀 Disparando hacia Náutica: ${proxyReq.method} ${target}${req.originalUrl}`);
+        proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        proxyReq.setHeader('X-Forwarded-For', clientIp);
+        if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
+      },
+      error: (err, req, res) => {
+        console.error(`[NauticaProxy] Error: ${err.message}`);
+        res.status(502).json({ error: 'Bad Gateway', message: 'Náutica Service no disponible.' });
+      },
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  4. Facturación Service
+// ══════════════════════════════════════════════════════════════════════════
+function createFacturacionProxy() {
+  const target = process.env.FACTURACION_SERVICE_URL;
+  if (!target) throw new Error('FACTURACION_SERVICE_URL no está definida.');
+
+  return createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: (path, req) => req.originalUrl,
+    on: {
+      proxyReq: (proxyReq, req) => {
+        console.log(`[Proxy] 🚀 Disparando hacia Facturación: ${proxyReq.method} ${target}${req.originalUrl}`);
+        proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        proxyReq.setHeader('X-Forwarded-For', clientIp);
+        if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
+      },
+      error: (err, req, res) => {
+        console.error(`[FacturacionProxy] Error: ${err.message}`);
+        res.status(502).json({ error: 'Bad Gateway', message: 'Facturación Service no disponible.' });
+      },
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  5. Reservas Service (MongoDB)
+// ══════════════════════════════════════════════════════════════════════════
+function createReservasProxy() {
+  const target = process.env.RESERVAS_SERVICE_URL;
+  if (!target) throw new Error('RESERVAS_SERVICE_URL no está definida.');
+
+  return createProxyMiddleware({
+    target,
+    changeOrigin: true,
+    pathRewrite: (path, req) => req.originalUrl,
+    on: {
+      proxyReq: (proxyReq, req) => {
+        console.log(`[Proxy] 🚀 Disparando hacia Reservas (Node): ${proxyReq.method} ${target}${req.originalUrl}`);
+        proxyReq.setHeader('X-Gateway-Source', 'club-nautico-api-gateway');
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        proxyReq.setHeader('X-Forwarded-For', clientIp);
+        if (req.user?.sub) proxyReq.setHeader('X-User-Id', req.user.sub);
+      },
+      error: (err, req, res) => {
+        console.error(`[ReservasProxy] Error: ${err.message}`);
+        res.status(502).json({ error: 'Bad Gateway', message: 'Reservas Service no disponible.' });
+      },
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  Exportación Consolidada
+// ══════════════════════════════════════════════════════════════════════════
+module.exports = {
+  createAuthProxy,
+  createSociosProxy,
+  createNauticaProxy,
+  createFacturacionProxy,
+  createReservasProxy
+};
