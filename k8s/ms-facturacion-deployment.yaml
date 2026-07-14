@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: ms-facturacion
+  name: ms-facturacion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: ms-facturacion
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: ms-facturacion
+    spec:
+      containers:
+        - env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://eureka-server:8761/eureka/
+            - name: SERVER_PORT
+              value: "8083"
+            - name: SPRING_CONFIG_IMPORT
+              value: optional:configserver:http://config-server:8888
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: ClubNautico2026!
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=facturacionDb;encrypt=true;trustServerCertificate=true
+            - name: SPRING_DATASOURCE_USERNAME
+              value: sa
+          image: ms-facturacion
+          name: club-nautico-ms-facturacion
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+      restartPolicy: Always

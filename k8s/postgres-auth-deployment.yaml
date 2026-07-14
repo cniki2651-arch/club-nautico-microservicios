@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: postgres-auth
+  name: postgres-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: postgres-auth
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.38.0 (a8f5d1cbd)
+      labels:
+        io.kompose.service: postgres-auth
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: club_nautica_auth_db
+            - name: POSTGRES_PASSWORD
+              value: root
+            - name: POSTGRES_USER
+              value: postgres
+          image: postgres:16-alpine
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready -U postgres -d club_nautica_auth_db
+            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          name: club-nautico-auth-db
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-auth-data
+      restartPolicy: Always
+      volumes:
+        - name: postgres-auth-data
+          persistentVolumeClaim:
+            claimName: postgres-auth-data

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.38.0 (a8f5d1cbd)
+  labels:
+    io.kompose.service: ms-nautica
+  name: ms-nautica
+spec:
+  ports:
+    - name: "8084"
+      port: 8084
+      targetPort: 3002
+  selector:
+    io.kompose.service: ms-nautica
