@@ -5,25 +5,17 @@ FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
-# 1) Copiar el pom agregador (padre) desde la raíz
-COPY pom.xml .
+# 1) Copiar ABSOLUTAMENTE TODO el repositorio al contenedor
+# Esto evita que Maven se queje por módulos faltantes
+COPY . .
 
-# 2) Copiar el Maven Wrapper que está dentro de auth-service
-COPY auth-service/.mvn/ .mvn/
-COPY auth-service/mvnw .
+# 2) Dar permisos de ejecución al Maven Wrapper
+RUN chmod +x auth-service/mvnw
 
-# 3) Copiar el pom del módulo auth-service
-COPY auth-service/pom.xml auth-service/
-
-# Dar permisos de ejecución al wrapper
-RUN chmod +x mvnw
-
-# 4) Pre-descargar dependencias (capa cacheada)
-RUN ./mvnw dependency:go-offline -B
-
-# 5) Copiar el código fuente y compilar SOLO este módulo
-COPY auth-service/src/ auth-service/src/
-RUN ./mvnw clean package -pl auth-service -am -DskipTests -B
+# 3) Compilar SOLO el módulo auth-service
+# -pl auth-service: "Project List", solo construye este proyecto
+# -am: "Also Make", si auth-service dependiera de código de otro módulo, lo compila también
+RUN ./auth-service/mvnw clean package -pl auth-service -am -DskipTests -B
 
 # ═══════════════════════════════════════════════════════════════════
 # STAGE 2 — Runtime
