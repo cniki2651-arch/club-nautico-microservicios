@@ -1,3 +1,5 @@
 spring:
   application:
     name: club.ms.facturacion
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8889}

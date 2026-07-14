@@ -16,15 +16,15 @@ services:
     container_name: club-nautico-auth-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${AUTH_DB_NAME:-club_nautica_auth_db}
-      POSTGRES_USER:     ${AUTH_DB_USER:-postgres}
+      POSTGRES_DB: ${AUTH_DB_NAME:-club_nautica_auth_db}
+      POSTGRES_USER: ${AUTH_DB_USER:-postgres}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-root}
     ports:
       - "5433:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-postgres} -d ${AUTH_DB_NAME:-club_nautica_auth_db}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USER:-postgres} -d ${AUTH_DB_NAME:-club_nautica_auth_db}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,126 +41,199 @@ services:
     ports:
       - "${AUTH_SERVER_PORT:-8081}:8081"
     environment:
-      DB_URL:      jdbc:postgresql://postgres-auth:5432/${AUTH_DB_NAME:-club_nautica_auth_db}
+      DB_URL: jdbc:postgresql://postgres-auth:5432/${AUTH_DB_NAME:-club_nautica_auth_db}
       DB_USERNAME: ${AUTH_DB_USER:-postgres}
       DB_PASSWORD: ${AUTH_DB_PASSWORD:-root}
-      JWT_SECRET:                  ${JWT_SECRET:-EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
-      JWT_ACCESS_EXPIRATION_MS:    ${JWT_ACCESS_EXPIRATION_MS:-3600000}
+      JWT_SECRET: ${JWT_SECRET:-EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-3600000}
       JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS:-7}
       SERVER_PORT: 8081
       JPA_SHOW_SQL: "false"
-      # EUREKA_URL: http://eureka-server:8761/eureka/   # descomentar cuando eureka-server esté listo
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     depends_on:
       postgres-auth:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
     networks:
       - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # EUREKA SERVER —  pendiente
+  # EUREKA SERVER
   # ═══════════════════════════════════════════════════════════════
-  # eureka-server:
-  #   build:
-  #     context: ./ClubNauticoContainer
-  #     dockerfile: eureka-server/Dockerfile
-  #   container_name: club-nautico-eureka
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8761:8761"
-  #   networks:
-  #     - club-nautico-net
+  eureka-server:
+    build:
+      context: ./ClubNauticoContainer
+      dockerfile: club.ms.eureka/Dockerfile
+    container_name: club-nautico-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SERVER_PORT: 8761
+    networks:
+      - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # CONFIG SERVER —  pendiente (club.ms.config)
+  # CONFIG SERVER (club.ms.config)
   # ═══════════════════════════════════════════════════════════════
-  # config-server:
-  #   build:
-  #     context: ./ClubNauticoContainer
-  #     dockerfile: club.ms.config/Dockerfile
-  #   container_name: club-nautico-config
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8888:8888"
-  #   networks:
-  #     - club-nautico-net
+  config-server:
+    build:
+      context: ./ClubNauticoContainer
+      dockerfile: club.ms.config/Dockerfile
+    container_name: club-nautico-config
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      SERVER_PORT: 8888
+    networks:
+      - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # MS-SOCIOS —  pendiente
+  # MS-SOCIOS
   # ═══════════════════════════════════════════════════════════════
-  # postgres-socios:
-  #   image: postgres:16-alpine
-  #   container_name: club-nautico-socios-db
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_DB:       ${SOCIOS_DB_NAME:-club_nautica_socios_db}
-  #     POSTGRES_USER:     ${SOCIOS_DB_USER:-postgres}
-  #     POSTGRES_PASSWORD: ${SOCIOS_DB_PASSWORD:-root}
-  #   ports:
-  #     - "5434:5432"
-  #   volumes:
-  #     - postgres_socios_data:/var/lib/postgresql/data
-  #   networks:
-  #     - club-nautico-net
-  #
-  # ms-socios:
-  #   build:
-  #     context: ./ClubNauticoContainer
-  #     dockerfile: ClubNauticoMSSocios/Dockerfile
-  #   container_name: club-nautico-ms-socios
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8082:8082"
-  #   depends_on:
-  #     postgres-socios:
-  #       condition: service_healthy
-  #   networks:
-  #     - club-nautico-net
+  postgres-socios:
+    image: postgres:16-alpine
+    container_name: club-nautico-socios-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${SOCIOS_DB_NAME:-sociosDb}
+      POSTGRES_USER: ${SOCIOS_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${SOCIOS_DB_PASSWORD:-postgres}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_socios_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${SOCIOS_DB_USER:-postgres} -d ${SOCIOS_DB_NAME:-sociosDb}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - club-nautico-net
+
+  ms-socios:
+    build:
+      context: ./ClubNauticoContainer
+      dockerfile: ClubNauticoMSSocios/Dockerfile
+    container_name: club-nautico-ms-socios
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-socios:5432/${SOCIOS_DB_NAME:-sociosDb}
+      SPRING_DATASOURCE_USERNAME: ${SOCIOS_DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SOCIOS_DB_PASSWORD:-postgres}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    depends_on:
+      postgres-socios:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    networks:
+      - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # MS-FACTURACION —  pendiente (lo estás haciendo tú)
+  # MS-FACTURACION — SQL Server
   # ═══════════════════════════════════════════════════════════════
-  # postgres-facturacion:
-  #   image: postgres:16-alpine
-  #   container_name: club-nautico-facturacion-db
-  #   restart: unless-stopped
-  #   environment:
-  #     POSTGRES_DB:       ${FACTURACION_DB_NAME:-club_nautica_facturacion_db}
-  #     POSTGRES_USER:     ${FACTURACION_DB_USER:-postgres}
-  #     POSTGRES_PASSWORD: ${FACTURACION_DB_PASSWORD:-root}
-  #   ports:
-  #     - "5435:5432"
-  #   volumes:
-  #     - postgres_facturacion_data:/var/lib/postgresql/data
-  #   networks:
-  #     - club-nautico-net
-  #
-  # ms-facturacion:
-  #   build:
-  #     context: ./ClubNauticoContainer
-  #     dockerfile: ms-facturacion/Dockerfile
-  #   container_name: club-nautico-ms-facturacion
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8083:8083"
-  #   depends_on:
-  #     postgres-facturacion:
-  #       condition: service_healthy
-  #   networks:
-  #     - club-nautico-net
+  sqlserver-facturacion:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: club-nautico-facturacion-db
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${FACTURACION_DB_PASSWORD:-ClubNautico2026!}
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_facturacion_data:/var/opt/mssql
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - club-nautico-net
+
+  ms-facturacion:
+    build:
+      context: ./ClubNauticoContainer
+      dockerfile: club.ms.facturacion/Dockerfile
+    container_name: club-nautico-ms-facturacion
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=${FACTURACION_DB_NAME:-facturacionDb};encrypt=true;trustServerCertificate=true
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: ${FACTURACION_DB_PASSWORD:-ClubNautico2026!}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+    depends_on:
+      sqlserver-facturacion:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      config-server:
+        condition: service_started
+    networks:
+      - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # MS-NAUTICA —  pendiente (Node, fuera de ClubNauticoContainer)
+  # MS-NAUTICA — Node.js + MySQL
   # ═══════════════════════════════════════════════════════════════
-  # ms-nautica:
-  #   build:
-  #     context: ./club-nautico-ms-nautica
-  #     dockerfile: Dockerfile
-  #   container_name: club-nautico-ms-nautica
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8084:8084"
-  #   networks:
-  #     - club-nautico-net
+  db-nautica:
+    image: mysql:8.0
+    container_name: club-nautico-nautica-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NAUTICA_DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${NAUTICA_DB_NAME:-club_nautica_db}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_nautica_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${NAUTICA_DB_PASSWORD:-root}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - club-nautico-net
+
+  ms-nautica:
+    build:
+      context: ./club-nautico-ms-nautica
+      dockerfile: Dockerfile
+    container_name: club-nautico-ms-nautica
+    restart: unless-stopped
+    ports:
+      - "${NAUTICA_PORT:-8084}:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: db-nautica
+      DB_USER: root
+      DB_PASSWORD: ${NAUTICA_DB_PASSWORD:-root}
+      DB_NAME: ${NAUTICA_DB_NAME:-club_nautica_db}
+      JWT_SECRET: ${JWT_SECRET:-EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
+    depends_on:
+      db-nautica:
+        condition: service_healthy
+    networks:
+      - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
   # API GATEWAY —  pendiente (Node, compañeros)
@@ -177,23 +250,23 @@ services:
   #     - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # MS-RESERVAS — Node.js + MongoDB Atlas
+  # MS-RESERVAS — Node.js + MongoDB Atlas — pendiente (confirmar MONGO_URI con Khalep)
   # ═══════════════════════════════════════════════════════════════
-  ms-reservas:
-    build:
-      context: ./ms-reservas
-      dockerfile: Dockerfile
-    container_name: club-nautico-ms-reservas
-    restart: unless-stopped
-    ports:
-      - "${RESERVAS_PORT:-8085}:8085"
-    environment:
-      PORT: 8085
-      NODE_ENV: production
-      MONGO_URI: ${RESERVAS_MONGO_URI}
-      CORS_ORIGIN: ${RESERVAS_CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}
-    networks:
-      - club-nautico-net
+  # ms-reservas:
+  #   build:
+  #     context: ./ms-reservas
+  #     dockerfile: Dockerfile
+  #   container_name: club-nautico-ms-reservas
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${RESERVAS_PORT:-8085}:8085"
+  #   environment:
+  #     PORT: 8085
+  #     NODE_ENV: production
+  #     MONGO_URI: ${RESERVAS_MONGO_URI}
+  #     CORS_ORIGIN: ${RESERVAS_CORS_ORIGIN:-http://localhost:3000,http://localhost:8080}
+  #   networks:
+  #     - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
   # RABBITMQ — Message Broker (AMQP)
@@ -204,15 +277,15 @@ services:
     container_name: club-nautico-rabbitmq
     restart: unless-stopped
     ports:
-      - "5672:5672"    # AMQP protocol
-      - "15672:15672"  # Management UI
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
       interval: 15s
       timeout: 10s
       retries: 6
@@ -235,13 +308,13 @@ services:
     environment:
       PORT: 8086
       NODE_ENV: production
-      RABBITMQ_URL:   amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
       RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-nautica_events}
       # Eureka (descomentar cuando eureka-server esté activo)
       # EUREKA_HOST:    eureka-server
       # EUREKA_PORT:    8761
       EUREKA_ENABLED: "false"
-      SERVICE_HOST:   notificaciones
+      SERVICE_HOST: notificaciones
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -255,10 +328,12 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-  # postgres_socios_data:
-  #   driver: local
-  # postgres_facturacion_data:
-  #   driver: local
+  postgres_socios_data:
+    driver: local
+  sqlserver_facturacion_data:
+    driver: local
+  mysql_nautica_data:
+    driver: local
 
 networks:
   club-nautico-net:

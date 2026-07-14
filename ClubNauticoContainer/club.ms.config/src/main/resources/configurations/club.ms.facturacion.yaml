@@ -1,16 +1,19 @@
 server:
-  port: ${SERVER_PORT:8082}
+  port: ${SERVER_PORT:8084}
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/sociosDb}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=facturacionDb;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:ClubNautico2026!}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: ${JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
 
 eureka:
   instance:
