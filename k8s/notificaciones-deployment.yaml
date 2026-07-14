@@ -1,42 +1,154 @@
+# =============================================================================
+#  MS-Notificaciones — Kubernetes Manifests
+#  Incluye: Deployment (con initContainer) y Service
+# =============================================================================
+
+---
+# ── Deployment ────────────────────────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
-    kompose.version: 1.38.0 (a8f5d1cbd)
+  name: ms-notificaciones
+  namespace: default
   labels:
-    io.kompose.service: notificaciones
-  name: notificaciones
+    app: ms-notificaciones
+    component: async-consumer
+    tier: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: notificaciones
+      app: ms-notificaciones
   template:
     metadata:
-      annotations:
-        kompose.cmd: C:\7MO CICLO\DSW\Club-Nautico\club-nautico-microservicios\kompose.exe convert -f docker-compose.yml -o k8s/
-        kompose.version: 1.38.0 (a8f5d1cbd)
       labels:
-        io.kompose.service: notificaciones
+        app: ms-notificaciones
+        component: async-consumer
+        tier: backend
     spec:
+      # ── initContainers ──────────────────────────────────────────────────────
+      # Espera activamente a que el puerto 5672 de RabbitMQ esté disponible
+      # antes de iniciar el contenedor principal de Node.js.
+      # Estrategia: bucle de nc (netcat) cada 5 segundos → máx. ~5 min.
+      initContainers:
+        - name: wait-for-rabbitmq
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              echo "⏳ Esperando a que RabbitMQ (rabbitmq:5672) esté disponible..."
+              until nc -z rabbitmq 5672; do
+                echo "   RabbitMQ no disponible aún. Reintentando en 5s..."
+                sleep 5
+              done
+              echo "✅ RabbitMQ disponible. Iniciando ms-notificaciones..."
+
+      # ── Contenedor principal ────────────────────────────────────────────────
       containers:
-        - env:
-            - name: EUREKA_ENABLED
-              value: "false"
-            - name: NODE_ENV
-              value: production
+        - name: ms-notificaciones
+          # Reemplazar con la imagen de tu registro (Docker Hub, GCR, ECR, etc.)
+          image: club-nautico/ms-notificaciones:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-health
+              containerPort: 8086
+              protocol: TCP
+          env:
             - name: PORT
               value: "8086"
+            - name: NODE_ENV
+              value: "production"
             - name: RABBITMQ_QUEUE
-              value: nautica_events
+              value: "nautica_events"
             - name: RABBITMQ_URL
-              value: amqp://guest:guest@rabbitmq:5672
+              valueFrom:
+                secretKeyRef:
+                  name: notificaciones-secret
+                  key: rabbitmq-url
+            # Registro en Eureka (descomentar cuando eureka-server esté activo en K8s)
+            # - name: EUREKA_HOST
+            #   value: "eureka-server"
+            # - name: EUREKA_PORT
+            #   value: "8761"
+            - name: EUREKA_ENABLED
+              value: "false"
             - name: SERVICE_HOST
-              value: notificaciones
-          image: notificaciones
-          name: club-nautico-notificaciones
-          ports:
-            - containerPort: 8086
-              protocol: TCP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP   # IP real del pod en el clúster
+
+          # ── Liveness Probe ────────────────────────────────────────────────
+          # Si este probe falla repetidamente, K8s reinicia el contenedor.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http-health
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # ── Readiness Probe ───────────────────────────────────────────────
+          # Si este probe falla, el pod se retira del Service (no recibe tráfico).
+          # El servicio no recibirá tráfico HTTP de clientes, pero el consumer
+          # de RabbitMQ sigue activo internamente.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http-health
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # ── Recursos ──────────────────────────────────────────────────────
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+
+      # Política de reinicio: siempre (alineada con restart: unless-stopped de Compose)
       restartPolicy: Always
+
+---
+# ── Service ────────────────────────────────────────────────────────────────────
+# ClusterIP: el health endpoint es accesible dentro del clúster.
+# Si se necesita acceso externo al /health, cambiar a NodePort o LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-notificaciones
+  namespace: default
+  labels:
+    app: ms-notificaciones
+    component: async-consumer
+spec:
+  selector:
+    app: ms-notificaciones
+  ports:
+    - name: http-health
+      port: 8086
+      targetPort: 8086
+      protocol: TCP
+  type: ClusterIP
+
+---
+# ── Secret: URL de conexión a RabbitMQ ────────────────────────────────────────
+# IMPORTANTE: En producción usar Vault, Sealed Secrets o External Secrets Operator.
+# El valor es Base64 de "amqp://guest:guest@rabbitmq:5672"
+apiVersion: v1
+kind: Secret
+metadata:
+  name: notificaciones-secret
+  namespace: default
+  labels:
+    app: ms-notificaciones
+type: Opaque
+data:
+  # echo -n "amqp://guest:guest@rabbitmq:5672" | base64
+  rabbitmq-url: YW1xcDovL2d1ZXN0Omd1ZXN0QHJhYmJpdG1xOjU2NzI=
