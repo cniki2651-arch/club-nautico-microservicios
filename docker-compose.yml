@@ -116,33 +116,44 @@ services:
   #     - club-nautico-net
 
   # ═══════════════════════════════════════════════════════════════
-  # MS-FACTURACION —  pendiente (lo estás haciendo tú)
+  # MS-FACTURACION — SQL Server (Franklin)
   # ═══════════════════════════════════════════════════════════════
-  # postgres-facturacion:
-  #   image: postgres:16-alpine
+  # sqlserver-facturacion:
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
   #   container_name: club-nautico-facturacion-db
   #   restart: unless-stopped
   #   environment:
-  #     POSTGRES_DB:       ${FACTURACION_DB_NAME:-club_nautica_facturacion_db}
-  #     POSTGRES_USER:     ${FACTURACION_DB_USER:-postgres}
-  #     POSTGRES_PASSWORD: ${FACTURACION_DB_PASSWORD:-root}
+  #     ACCEPT_EULA: "Y"
+  #     MSSQL_SA_PASSWORD: ${FACTURACION_DB_PASSWORD:-ClubNautico2026!}
+  #     MSSQL_PID: Express
   #   ports:
-  #     - "5435:5432"
+  #     - "1433:1433"
   #   volumes:
-  #     - postgres_facturacion_data:/var/lib/postgresql/data
+  #     - sqlserver_facturacion_data:/var/opt/mssql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+  #     start_period: 20s
   #   networks:
   #     - club-nautico-net
   #
   # ms-facturacion:
   #   build:
   #     context: ./ClubNauticoContainer
-  #     dockerfile: ms-facturacion/Dockerfile
+  #     dockerfile: facturacion/Dockerfile
   #   container_name: club-nautico-ms-facturacion
   #   restart: unless-stopped
   #   ports:
   #     - "8083:8083"
+  #   environment:
+  #     DB_URL:      jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=${FACTURACION_DB_NAME:-club_nautica_facturacion_db};encrypt=true;trustServerCertificate=true
+  #     DB_USERNAME: sa
+  #     DB_PASSWORD: ${FACTURACION_DB_PASSWORD:-ClubNautico2026!}
+  #     SERVER_PORT: 8083
   #   depends_on:
-  #     postgres-facturacion:
+  #     sqlserver-facturacion:
   #       condition: service_healthy
   #   networks:
   #     - club-nautico-net
@@ -194,7 +205,7 @@ volumes:
     driver: local
   # postgres_socios_data:
   #   driver: local
-  # postgres_facturacion_data:
+  # sqlserver_facturacion_data:
   #   driver: local
 
 networks:
