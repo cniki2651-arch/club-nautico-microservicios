@@ -8,14 +8,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const { Eureka } = require('eureka-js-client');
-const os         = require('os');
+const os = require('os');
 
-const EUREKA_ENABLED  = process.env.EUREKA_ENABLED !== 'false';
-const EUREKA_HOST     = process.env.EUREKA_HOST    || 'localhost';
-const EUREKA_PORT     = parseInt(process.env.EUREKA_PORT || '8761', 10);
-const SERVICE_HOST    = process.env.SERVICE_HOST   || os.hostname();
+const EUREKA_ENABLED = process.env.EUREKA_ENABLED !== 'false';
+const EUREKA_HOST = process.env.EUREKA_HOST || 'localhost';
+const EUREKA_PORT = parseInt(process.env.EUREKA_PORT || '8761', 10);
+const SERVICE_HOST = process.env.SERVICE_HOST || os.hostname();
 const SERVICE_IP_ADDR = process.env.SERVICE_IP_ADDR || '127.0.0.1';
-const PORT            = parseInt(process.env.PORT  || '8086', 10);
+const PORT = parseInt(process.env.PORT || '8086', 10);
 
 let clientInstance = null;
 
@@ -34,34 +34,38 @@ function getInstance() {
 
   clientInstance = new Eureka({
     instance: {
-      app:        'MS-NOTIFICACIONES',
+      app: 'MS-NOTIFICACIONES',
       instanceId: `${SERVICE_HOST}:ms-notificaciones:${PORT}`,
-      hostName:   SERVICE_HOST,
-      ipAddr:     SERVICE_IP_ADDR,
-      statusPageUrl:      `http://${SERVICE_HOST}:${PORT}/health`,
-      healthCheckUrl:     `http://${SERVICE_HOST}:${PORT}/health`,
-      homePageUrl:        `http://${SERVICE_HOST}:${PORT}/`,
+      hostName: SERVICE_HOST,
+      ipAddr: SERVICE_IP_ADDR,
+      statusPageUrl: `http://${SERVICE_HOST}:${PORT}/health`,
+      healthCheckUrl: `http://${SERVICE_HOST}:${PORT}/health`,
+      homePageUrl: `http://${SERVICE_HOST}:${PORT}/`,
       port: {
-        '$':     PORT,
+        '$': PORT,
         '@enabled': true,
       },
       vipAddress: 'ms-notificaciones',
       dataCenterInfo: {
         '@class': 'com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo',
-        name:     'MyOwn',
+        name: 'MyOwn',
       },
     },
     eureka: {
-      host:               EUREKA_HOST,
-      port:               EUREKA_PORT,
-      servicePath:        '/eureka/apps/',
-      maxRetries:         5,
-      requestRetryDelay:  2000,
-      fetchRegistry:      false,   // Este servicio solo publica; no necesita descubrir otros
+      host: EUREKA_HOST,
+      port: EUREKA_PORT,
+      servicePath: '/eureka/apps/',
+      maxRetries: 5,
+      requestRetryDelay: 2000,
+      fetchRegistry: false,   // Este servicio solo publica; no necesita descubrir otros
       registerWithEureka: true,
     },
+    // Solución al TypeError: Se mapean las funciones de la consola
     logger: {
-      level: 'warn', // Suprimir logs verbosos de la librería; solo errores y advertencias
+      warn: console.warn,
+      info: console.info,
+      error: console.error,
+      debug: console.debug
     },
   });
 
