@@ -34,7 +34,8 @@ spec:
               value: amqp://guest:guest@rabbitmq:5672
             - name: SERVICE_HOST
               value: notificaciones
-          image: notificaciones
+          image: club-nautico-microservicios-notificaciones:latest
+          imagePullPolicy: Never
           name: club-nautico-notificaciones
           ports:
             - containerPort: 8086

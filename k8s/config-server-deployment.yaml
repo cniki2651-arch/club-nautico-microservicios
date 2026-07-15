@@ -24,7 +24,8 @@ spec:
         - env:
             - name: SERVER_PORT
               value: "8888"
-          image: config-server
+          image: club-nautico-microservicios-config-server:latest
+          imagePullPolicy: Never
           name: club-nautico-config
           ports:
             - containerPort: 8888

@@ -24,7 +24,8 @@ spec:
         - envFrom:
             - configMapRef:
                 name: ms-reservas--env
-          image: ms-reservas
+          image: club-nautico-microservicios-ms-reservas:latest
+          imagePullPolicy: Never
           name: club-nautico-ms-reservas
           ports:
             - containerPort: 8085

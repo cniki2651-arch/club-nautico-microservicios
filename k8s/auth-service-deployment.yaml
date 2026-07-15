@@ -25,7 +25,7 @@ spec:
             - name: DB_PASSWORD
               value: root
             - name: DB_URL
-              value: jdbc:postgresql://postgres-auth:5432/club_nautica_auth_db
+              value: jdbc:postgresql://postgres-auth:5433/club_nautica_auth_db
             - name: DB_USERNAME
               value: postgres
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
@@ -42,7 +42,8 @@ spec:
               value: "8081"
             - name: SPRING_CONFIG_IMPORT
               value: optional:configserver:http://config-server:8888
-          image: auth-service
+          image: club-nautico-microservicios-auth-service:latest
+          imagePullPolicy: Never
           name: club-nautico-auth-service
           ports:
             - containerPort: 8081

@@ -24,7 +24,8 @@ spec:
         - envFrom:
             - configMapRef:
                 name: api-gateway--env
-          image: api-gateway
+          image: club-nautico-microservicios-api-gateway:latest
+          imagePullPolicy: Never
           name: club-nautico-api-gateway
           ports:
             - containerPort: 8080

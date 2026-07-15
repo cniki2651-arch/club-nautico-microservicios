@@ -34,7 +34,8 @@ spec:
               value: jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=facturacionDb;encrypt=true;trustServerCertificate=true
             - name: SPRING_DATASOURCE_USERNAME
               value: sa
-          image: ms-facturacion
+          image: club-nautico-microservicios-ms-facturacion:latest
+          imagePullPolicy: Never
           name: club-nautico-ms-facturacion
           ports:
             - containerPort: 8084

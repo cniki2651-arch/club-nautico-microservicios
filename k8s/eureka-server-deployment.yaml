@@ -24,7 +24,8 @@ spec:
         - env:
             - name: SERVER_PORT
               value: "8761"
-          image: eureka-server
+          image: club-nautico-microservicios-eureka-server:latest
+          imagePullPolicy: Never
           name: club-nautico-eureka
           ports:
             - containerPort: 8761

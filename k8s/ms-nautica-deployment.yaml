@@ -24,7 +24,8 @@ spec:
         - envFrom:
             - configMapRef:
                 name: club-nautico-ms-nautica--env
-          image: ms-nautica
+          image: club-nautico-microservicios-ms-nautica:latest
+          imagePullPolicy: Never
           name: club-nautico-ms-nautica
           ports:
             - containerPort: 3002

@@ -31,10 +31,11 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: postgres
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-socios:5432/sociosDb
+              value: jdbc:postgresql://postgres-socios:5434/sociosDb
             - name: SPRING_DATASOURCE_USERNAME
               value: postgres
-          image: ms-socios
+          image: club-nautico-microservicios-ms-socios:latest
+          imagePullPolicy: Never
           name: club-nautico-ms-socios
           ports:
             - containerPort: 8082
