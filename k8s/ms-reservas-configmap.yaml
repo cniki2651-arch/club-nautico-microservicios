@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ms-reservas-config
+  namespace: default
+data:
+  PORT: "8085"
+  NODE_ENV: "production"
+  MONGO_URI: "mongodb+srv://admin:HXSlWD6b7TCF2Dnj@clusterclubnautico.enzjfg6.mongodb.net/club_nautico_reservas?appName=ClusterClubNautico"
+  CORS_ORIGIN: "http://localhost:3000,http://localhost:8080"

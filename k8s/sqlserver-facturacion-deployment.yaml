@@ -31,10 +31,13 @@ spec:
             - name: MSSQL_SA_PASSWORD
               value: ClubNautico2026!
           image: mcr.microsoft.com/mssql/server:2022-latest
+          imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
               command:
-                - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q 'SELECT 1' || exit 1
+                - /bin/sh
+                - -c
+                - "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"
             failureThreshold: 10
             initialDelaySeconds: 20
             periodSeconds: 10

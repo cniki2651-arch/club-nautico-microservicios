@@ -34,7 +34,11 @@ spec:
           livenessProbe:
             exec:
               command:
-                - pg_isready -U postgres -d club_nautica_auth_db
+                - pg_isready
+                - -U
+                - postgres
+                - -d
+                - club_nautica_auth_db
             failureThreshold: 5
             initialDelaySeconds: 10
             periodSeconds: 10

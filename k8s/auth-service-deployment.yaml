@@ -21,29 +21,11 @@ spec:
         io.kompose.service: auth-service
     spec:
       containers:
-        - env:
-            - name: DB_PASSWORD
-              value: root
-            - name: DB_URL
-              value: jdbc:postgresql://postgres-auth:5433/club_nautica_auth_db
-            - name: DB_USERNAME
-              value: postgres
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: JPA_SHOW_SQL
-              value: "false"
-            - name: JWT_ACCESS_EXPIRATION_MS
-              value: "3600000"
-            - name: JWT_REFRESH_EXPIRATION_DAYS
-              value: "7"
-            - name: JWT_SECRET
-              value: EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!
-            - name: SERVER_PORT
-              value: "8081"
-            - name: SPRING_CONFIG_IMPORT
-              value: optional:configserver:http://config-server:8888
+        - envFrom:
+            - configMapRef:
+                name: auth-service-config
           image: club-nautico-microservicios-auth-service:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           name: club-nautico-auth-service
           ports:
             - containerPort: 8081

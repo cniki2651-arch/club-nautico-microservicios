@@ -21,11 +21,11 @@ spec:
         io.kompose.service: eureka-server
     spec:
       containers:
-        - env:
-            - name: SERVER_PORT
-              value: "8761"
+        - envFrom:
+            - configMapRef:
+                name: eureka-server-config
           image: club-nautico-microservicios-eureka-server:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           name: club-nautico-eureka
           ports:
             - containerPort: 8761

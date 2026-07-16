@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: default
+data:
+  DB_PASSWORD: "root"
+  DB_URL: "jdbc:postgresql://postgres-auth:5433/club_nautica_auth_db"
+  DB_USERNAME: "postgres"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-server:8761/eureka/"
+  JPA_SHOW_SQL: "false"
+  JWT_ACCESS_EXPIRATION_MS: "3600000"
+  JWT_REFRESH_EXPIRATION_DAYS: "7"
+  JWT_SECRET: "EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!"
+  SERVER_PORT: "8081"
+  SPRING_CONFIG_IMPORT: "optional:configserver:http://config-server:8888"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"

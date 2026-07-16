@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ms-nautica-config
+  namespace: default
+data:
+  PORT: "8083"
+  DB_HOST: "db-nautica"
+  DB_USER: "root"
+  DB_PASSWORD: "root"
+  DB_NAME: "club_nautica_db"
+  JWT_SECRET: "EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"

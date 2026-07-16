@@ -21,21 +21,11 @@ spec:
         io.kompose.service: ms-socios
     spec:
       containers:
-        - env:
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: SERVER_PORT
-              value: "8082"
-            - name: SPRING_CONFIG_IMPORT
-              value: optional:configserver:http://config-server:8888
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: postgres
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres-socios:5434/sociosDb
-            - name: SPRING_DATASOURCE_USERNAME
-              value: postgres
+        - envFrom:
+            - configMapRef:
+                name: ms-socios-config
           image: club-nautico-microservicios-ms-socios:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           name: club-nautico-ms-socios
           ports:
             - containerPort: 8082

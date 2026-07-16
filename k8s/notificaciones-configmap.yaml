@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notificaciones-config
+  namespace: default
+data:
+  PORT: "8086"
+  NODE_ENV: "production"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+  RABBITMQ_QUEUE: "nautica_events"
+  EUREKA_ENABLED: "false"
+  SERVICE_HOST: "notificaciones"

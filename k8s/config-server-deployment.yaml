@@ -21,11 +21,11 @@ spec:
         io.kompose.service: config-server
     spec:
       containers:
-        - env:
-            - name: SERVER_PORT
-              value: "8888"
+        - envFrom:
+            - configMapRef:
+                name: config-server-config
           image: club-nautico-microservicios-config-server:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           name: club-nautico-config
           ports:
             - containerPort: 8888

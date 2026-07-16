@@ -34,7 +34,11 @@ spec:
           livenessProbe:
             exec:
               command:
-                - pg_isready -U postgres -d sociosDb
+                - pg_isready
+                - -U
+                - postgres
+                - -d
+                - sociosDb
             failureThreshold: 5
             initialDelaySeconds: 10
             periodSeconds: 10

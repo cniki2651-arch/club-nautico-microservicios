@@ -21,21 +21,11 @@ spec:
         io.kompose.service: ms-facturacion
     spec:
       containers:
-        - env:
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: SERVER_PORT
-              value: "8084"
-            - name: SPRING_CONFIG_IMPORT
-              value: optional:configserver:http://config-server:8888
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: ClubNautico2026!
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=facturacionDb;encrypt=true;trustServerCertificate=true
-            - name: SPRING_DATASOURCE_USERNAME
-              value: sa
+        - envFrom:
+            - configMapRef:
+                name: ms-facturacion-config
           image: club-nautico-microservicios-ms-facturacion:latest
-          imagePullPolicy: Never
+          imagePullPolicy: IfNotPresent
           name: club-nautico-ms-facturacion
           ports:
             - containerPort: 8084
