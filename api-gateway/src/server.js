@@ -100,7 +100,10 @@ app.use(authMiddleware);             // ③ Validación JWT (bypass en rutas pú
 //  Rutas de Proxy
 // ══════════════════════════════════════════════════════════════════════════
 app.use('/auth', createAuthProxy());
+app.use('/api/admin', createAuthProxy());
+app.use('/api/test', createAuthProxy());
 app.use('/api/socios', createSociosProxy());
+app.use('/api/tipos-documento', createSociosProxy());
 app.use('/api/nautica', createNauticaProxy());
 app.use('/api/facturas', createFacturacionProxy());
 app.use('/api/cobranza', createFacturacionProxy());

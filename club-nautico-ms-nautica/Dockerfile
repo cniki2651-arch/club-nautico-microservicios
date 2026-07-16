@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # 6. Exponemos el puerto de tu API para que el exterior pueda comunicarse con ella
-EXPOSE 3002
+EXPOSE 8083
 
 # 7. El comando definitivo para arrancar tu microservicio
 CMD ["node", "src/index.js"]

@@ -11,6 +11,6 @@ spec:
   ports:
     - name: "8083"
       port: 8083
-      targetPort: 3002
+      targetPort: 8083
   selector:
     io.kompose.service: ms-nautica
