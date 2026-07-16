@@ -5,6 +5,7 @@ import club.ms.facturacion.dto.MorosidadInteresResponse;
 import club.ms.facturacion.service.CobranzaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,24 +21,28 @@ public class CobranzaController {
     private final CobranzaService cobranzaService;
 
     // Panel de cobranza: facturas vigentes proximas a vencer
+    @PreAuthorize("hasAuthority('ROLE_4')")
     @GetMapping("/pendientes")
     public ResponseEntity<List<CobranzaResponse>> pendientesPorVencer() {
         return ResponseEntity.ok(cobranzaService.facturasPendientesPorVencer());
     }
 
     // Facturas vencidas con calculo de interes por mora
+    @PreAuthorize("hasAuthority('ROLE_4')")
     @GetMapping("/vencidas")
     public ResponseEntity<List<CobranzaResponse>> vencidasConInteres() {
         return ResponseEntity.ok(cobranzaService.facturasVencidasConInteres());
     }
 
     // Historial de pagos ya registrados
+    @PreAuthorize("hasAuthority('ROLE_4')")
     @GetMapping("/historial")
     public ResponseEntity<List<CobranzaResponse>> historialPagos() {
         return ResponseEntity.ok(cobranzaService.historialPagos());
     }
 
     // Historial de calculos de mora guardados para una factura especifica
+    @PreAuthorize("hasAuthority('ROLE_4')")
     @GetMapping("/morosidad/{idFactura}")
     public ResponseEntity<List<MorosidadInteresResponse>> historialMorosidad(@PathVariable Long idFactura) {
         return ResponseEntity.ok(cobranzaService.historialMorosidadPorFactura(idFactura));

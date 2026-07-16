@@ -24,6 +24,12 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:EstaEsUnaClaveMuySecretaDeAlMenos32Caracteres!!!}
+    access-token-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
+    refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
+
 management:
   endpoints:
     web:
