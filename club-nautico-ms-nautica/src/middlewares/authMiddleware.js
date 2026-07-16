@@ -12,8 +12,11 @@ const verificarToken = (req, res, next) => {
 
     try {
         const verificado = jwt.verify(token, process.env.JWT_SECRET);
-        req.usuario = verificado; // Guardamos { id_usuario, id_rol }
-        next(); 
+        req.usuario = {
+            ...verificado,
+            id_rol: verificado.role_id
+        };
+        next();
     } catch (error) {
         return res.status(401).json({ mensaje: 'El token es inválido o ha expirado.' });
     }
@@ -25,8 +28,8 @@ const autorizarRoles = (...rolesPermitidos) => {
     return (req, res, next) => {
         // Verificamos si el rol del usuario está dentro de la lista de roles permitidos
         if (!req.usuario || !rolesPermitidos.includes(req.usuario.id_rol)) {
-            return res.status(403).json({ 
-                mensaje: 'Acceso denegado (403). Tu rol no tiene permisos para realizar esta acción.' 
+            return res.status(403).json({
+                mensaje: 'Acceso denegado (403). Tu rol no tiene permisos para realizar esta acción.'
             });
         }
         // Si su rol está en la lista, lo dejamos pasar
