@@ -78,11 +78,11 @@ app.get('/health', (_req, res) => {
     timestamp: new Date().toISOString(),
     uptime: `${Math.floor(process.uptime())}s`,
     targets: {
-      authService:       process.env.AUTH_SERVICE_URL,
-      sociosService:     process.env.SOCIOS_SERVICE_URL,
-      nauticaService:    process.env.NAUTICA_SERVICE_URL,
-      facturacionService:process.env.FACTURACION_SERVICE_URL,
-      reservasService:   process.env.RESERVAS_SERVICE_URL,
+      authService: process.env.AUTH_SERVICE_URL,
+      sociosService: process.env.SOCIOS_SERVICE_URL,
+      nauticaService: process.env.NAUTICA_SERVICE_URL,
+      facturacionService: process.env.FACTURACION_SERVICE_URL,
+      reservasService: process.env.RESERVAS_SERVICE_URL,
     },
     docs: {
       auth: `${process.env.AUTH_SERVICE_URL}/api-docs`,
@@ -102,7 +102,9 @@ app.use(authMiddleware);             // ③ Validación JWT (bypass en rutas pú
 app.use('/auth', createAuthProxy());
 app.use('/api/socios', createSociosProxy());
 app.use('/api/nautica', createNauticaProxy());
-app.use('/api/facturacion', createFacturacionProxy());
+app.use('/api/facturas', createFacturacionProxy());
+app.use('/api/cobranza', createFacturacionProxy());
+app.use('/api/consumos', createFacturacionProxy());
 app.use('/api/reservas', createReservasProxy());
 app.use('/api/recursos', createReservasProxy());
 
