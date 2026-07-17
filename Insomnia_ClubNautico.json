@@ -1,0 +1,672 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-07-16T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v8.0.0",
+  "resources": [
+    {
+      "_id": "wrk_clubnautico",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "Club Náutico - Microservicios",
+      "description": "Coleccion para probar el API Gateway y los microservicios directos. Antes de usar: correr Login y pegar el accessToken en el Environment (variable 'token').",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_clubnautico",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "socios_direct_url": "http://localhost:8082",
+        "token": "PEGA_AQUI_EL_ACCESS_TOKEN_DESPUES_DE_HACER_LOGIN"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "socios_direct_url", "token"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1
+    },
+
+    { "_id": "fld_auth", "_type": "request_group", "parentId": "wrk_clubnautico", "name": "1. Auth", "description": "Registro/login publicos. El resto de carpetas requieren el token generado aqui.", "metaSortKey": 1 },
+    { "_id": "fld_socios", "_type": "request_group", "parentId": "wrk_clubnautico", "name": "2. Socios", "metaSortKey": 2 },
+    { "_id": "fld_facturacion", "_type": "request_group", "parentId": "wrk_clubnautico", "name": "3. Facturacion", "metaSortKey": 3 },
+    { "_id": "fld_fact_facturas", "_type": "request_group", "parentId": "fld_facturacion", "name": "Facturas", "metaSortKey": 1 },
+    { "_id": "fld_fact_consumos", "_type": "request_group", "parentId": "fld_facturacion", "name": "Consumos", "metaSortKey": 2 },
+    { "_id": "fld_fact_cobranza", "_type": "request_group", "parentId": "fld_facturacion", "name": "Cobranza", "metaSortKey": 3 },
+    { "_id": "fld_nautica", "_type": "request_group", "parentId": "wrk_clubnautico", "name": "4. Nautica (requiere rol 3 - Naviero)", "metaSortKey": 4 },
+    { "_id": "fld_naut_embarcaciones", "_type": "request_group", "parentId": "fld_nautica", "name": "Embarcaciones", "metaSortKey": 1 },
+    { "_id": "fld_naut_radas", "_type": "request_group", "parentId": "fld_nautica", "name": "Radas", "metaSortKey": 2 },
+    { "_id": "fld_naut_tripulantes", "_type": "request_group", "parentId": "fld_nautica", "name": "Tripulantes", "metaSortKey": 3 },
+    { "_id": "fld_naut_zarpes", "_type": "request_group", "parentId": "fld_nautica", "name": "Zarpes", "metaSortKey": 4 },
+    { "_id": "fld_reservas", "_type": "request_group", "parentId": "wrk_clubnautico", "name": "5. Reservas", "metaSortKey": 5 },
+    { "_id": "fld_res_recursos", "_type": "request_group", "parentId": "fld_reservas", "name": "Recursos", "metaSortKey": 1 },
+    { "_id": "fld_res_reservas", "_type": "request_group", "parentId": "fld_reservas", "name": "Reservas", "metaSortKey": 2 },
+
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Register",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/register",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"correo\": \"demo@clubnautico.test\",\n  \"password\": \"TestPass123!\",\n  \"nombres\": \"Demo\",\n  \"apellidos\": \"User\",\n  \"rol\": \"1\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"correo\": \"demo@clubnautico.test\",\n  \"password\": \"TestPass123!\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": 2,
+      "description": "Copia el 'accessToken' de la respuesta y pegalo en la variable 'token' del Environment."
+    },
+    {
+      "_id": "req_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Refresh Token",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/refresh",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refreshToken\": \"PEGA_AQUI_EL_REFRESH_TOKEN\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_logout",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Logout",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/logout",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_admin_listar_usuarios",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Admin: Listar usuarios (requiere rol 1 - Jefe)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/admin/usuarios",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_admin_cambiar_rol",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Admin: Cambiar rol de usuario (requiere rol 1 - Jefe)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/admin/usuarios/1/rol",
+      "body": {
+        "mimeType": "application/json",
+        "text": "\"4\""
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 6,
+      "description": "El body es el ID del nuevo rol como string JSON crudo, ej. \"4\" (no un objeto). Roles: 1=Jefatura, 2=Secretaria, 3=Naviero, 4=Finanzas."
+    },
+
+    {
+      "_id": "req_socios_listar",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Listar socios",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/socios",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_socios_get",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Buscar socio por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/socios/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_socios_crear",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Crear socio",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/socios",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idTipoDoc\": 1,\n  \"dni\": \"87654321\",\n  \"nombres\": \"Demo\",\n  \"apellidos\": \"Presentacion\",\n  \"telefono\": \"999888777\",\n  \"estadoMembresia\": \"ACTIVO\",\n  \"fechaIngreso\": \"2026-07-16\",\n  \"clasificacion\": \"REGULAR\",\n  \"correo\": \"demo.presentacion@clubnautico.test\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_socios_actualizar",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Actualizar socio",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/socios/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idTipoDoc\": 1,\n  \"dni\": \"87654321\",\n  \"nombres\": \"Demo\",\n  \"apellidos\": \"Actualizado\",\n  \"telefono\": \"999888777\",\n  \"estadoMembresia\": \"ACTIVO\",\n  \"fechaIngreso\": \"2026-07-16\",\n  \"clasificacion\": \"REGULAR\",\n  \"correo\": \"demo.presentacion@clubnautico.test\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_socios_eliminar",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Eliminar socio",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/socios/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_tipos_doc",
+      "_type": "request",
+      "parentId": "fld_socios",
+      "name": "Listar tipos de documento (directo, no pasa por gateway)",
+      "method": "GET",
+      "url": "{{ _.socios_direct_url }}/api/tipos-documento",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 6,
+      "description": "El gateway solo tiene montado /api/socios, no /api/tipos-documento. Por eso este request va directo al puerto 8082 del servicio (solo funciona en docker-compose local, no en k8s)."
+    },
+
+    {
+      "_id": "req_facturas_listar",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Listar facturas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/facturas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_facturas_get",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Buscar factura por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/facturas/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_facturas_crear",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Crear factura",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/facturas",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idSocio\": 1,\n  \"concepto\": \"Cuota mensual\",\n  \"montoBase\": 150.00,\n  \"montoTotal\": 150.00,\n  \"fechaEmision\": \"2026-07-16\",\n  \"fechaVencimiento\": \"2026-08-15\",\n  \"estadoPago\": \"VIGENTE\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_facturas_actualizar",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Actualizar factura",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/facturas/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idSocio\": 1,\n  \"concepto\": \"Cuota mensual (editada)\",\n  \"montoBase\": 150.00,\n  \"montoTotal\": 160.00,\n  \"fechaEmision\": \"2026-07-16\",\n  \"fechaVencimiento\": \"2026-08-15\",\n  \"estadoPago\": \"VIGENTE\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_facturas_pagar",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Registrar pago de factura",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/facturas/1/pagar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 5,
+      "description": "Query param opcional ?fechaPago=YYYY-MM-DD, si no se manda usa la fecha actual."
+    },
+    {
+      "_id": "req_facturas_eliminar",
+      "_type": "request",
+      "parentId": "fld_fact_facturas",
+      "name": "Eliminar factura",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/facturas/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 6
+    },
+
+    {
+      "_id": "req_consumos_listar",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Listar consumos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/consumos",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_consumos_sin_facturar",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Listar consumos sin facturar",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/consumos/sin-facturar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_consumos_get",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Buscar consumo por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/consumos/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_consumos_crear",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Crear consumo",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/consumos",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idSocio\": 1,\n  \"servicio\": \"Restaurante\",\n  \"monto\": 45.50,\n  \"descripcion\": \"Almuerzo\",\n  \"estado\": \"PENDIENTE\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_consumos_actualizar",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Actualizar consumo",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/consumos/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"idSocio\": 1,\n  \"servicio\": \"Restaurante\",\n  \"monto\": 50.00,\n  \"descripcion\": \"Almuerzo (editado)\",\n  \"estado\": \"PENDIENTE\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_consumos_eliminar",
+      "_type": "request",
+      "parentId": "fld_fact_consumos",
+      "name": "Eliminar consumo",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/consumos/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 6
+    },
+
+    {
+      "_id": "req_cobranza_pendientes",
+      "_type": "request",
+      "parentId": "fld_fact_cobranza",
+      "name": "Pendientes por vencer",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cobranza/pendientes",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_cobranza_vencidas",
+      "_type": "request",
+      "parentId": "fld_fact_cobranza",
+      "name": "Vencidas con interes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cobranza/vencidas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_cobranza_historial",
+      "_type": "request",
+      "parentId": "fld_fact_cobranza",
+      "name": "Historial de pagos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cobranza/historial",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_cobranza_morosidad",
+      "_type": "request",
+      "parentId": "fld_fact_cobranza",
+      "name": "Historial de morosidad por factura",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cobranza/morosidad/1",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 4
+    },
+
+    {
+      "_id": "req_embarcaciones_listar",
+      "_type": "request",
+      "parentId": "fld_naut_embarcaciones",
+      "name": "Listar embarcaciones",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/nautica/embarcaciones",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_embarcaciones_crear",
+      "_type": "request",
+      "parentId": "fld_naut_embarcaciones",
+      "name": "Crear embarcacion",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/nautica/embarcaciones/crear",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id_socio\": 1,\n  \"matricula\": \"PE-1234\",\n  \"nombre_nave\": \"Sirena\",\n  \"tipo\": \"Lancha\",\n  \"eslora\": 8.5\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_embarcaciones_validar",
+      "_type": "request",
+      "parentId": "fld_naut_embarcaciones",
+      "name": "Validar embarcacion",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/nautica/embarcaciones/1/validar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 3
+    },
+
+    {
+      "_id": "req_radas_listar",
+      "_type": "request",
+      "parentId": "fld_naut_radas",
+      "name": "Listar radas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/nautica/radas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_radas_asignar",
+      "_type": "request",
+      "parentId": "fld_naut_radas",
+      "name": "Asignar rada",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/nautica/radas/1/asignar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_radas_liberar",
+      "_type": "request",
+      "parentId": "fld_naut_radas",
+      "name": "Liberar rada",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/nautica/radas/1/liberar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 3
+    },
+
+    {
+      "_id": "req_tripulantes_listar",
+      "_type": "request",
+      "parentId": "fld_naut_tripulantes",
+      "name": "Listar tripulantes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/nautica/tripulantes",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_tripulantes_crear",
+      "_type": "request",
+      "parentId": "fld_naut_tripulantes",
+      "name": "Crear tripulante",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/nautica/tripulantes/crear",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id_tipo_doc\": 1,\n  \"nombres\": \"Carlos\",\n  \"apellidos\": \"Marino\",\n  \"dni\": \"11223344\",\n  \"rol\": \"Capitan\",\n  \"licencia\": \"LIC-9988\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 2
+    },
+
+    {
+      "_id": "req_zarpes_listar",
+      "_type": "request",
+      "parentId": "fld_naut_zarpes",
+      "name": "Listar zarpes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/nautica/zarpes",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_zarpes_crear",
+      "_type": "request",
+      "parentId": "fld_naut_zarpes",
+      "name": "Crear zarpe",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/nautica/zarpes",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id_socio\": 1,\n  \"id_embarcacion\": 1,\n  \"id_tripulante\": 1,\n  \"fecha_salida\": \"2026-07-20\",\n  \"hora_salida\": \"09:00\",\n  \"fecha_retorno\": \"2026-07-20\",\n  \"hora_retorno\": \"17:00\",\n  \"destino\": \"Isla Palomino\",\n  \"pasajeros\": { \"adultos\": 4, \"ninos\": 1 }\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 2,
+      "description": "Requiere que la embarcacion (id_embarcacion) ya este con estado_capitania = 'Validado' (usar 'Validar embarcacion' primero)."
+    },
+    {
+      "_id": "req_zarpes_aprobar",
+      "_type": "request",
+      "parentId": "fld_naut_zarpes",
+      "name": "Aprobar zarpe",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/nautica/zarpes/1/aprobar",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_zarpes_documento",
+      "_type": "request",
+      "parentId": "fld_naut_zarpes",
+      "name": "Obtener documento de zarpe",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/nautica/zarpes/1/documento",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 4
+    },
+
+    {
+      "_id": "req_recursos_listar",
+      "_type": "request",
+      "parentId": "fld_res_recursos",
+      "name": "Listar recursos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/recursos",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_recursos_get",
+      "_type": "request",
+      "parentId": "fld_res_recursos",
+      "name": "Buscar recurso por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/recursos/REEMPLAZAR_CON_ID_MONGO",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_recursos_crear",
+      "_type": "request",
+      "parentId": "fld_res_recursos",
+      "name": "Crear recurso",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/recursos",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre_servicio\": \"Lancha Nautica Premium\",\n  \"categoria\": \"Embarcaciones\",\n  \"operativo_global\": true\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_recursos_actualizar",
+      "_type": "request",
+      "parentId": "fld_res_recursos",
+      "name": "Actualizar recurso",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/recursos/REEMPLAZAR_CON_ID_MONGO",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"operativo_global\": false,\n  \"motivo_deshabilitado\": \"En mantenimiento\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_recursos_eliminar",
+      "_type": "request",
+      "parentId": "fld_res_recursos",
+      "name": "Eliminar recurso",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/recursos/REEMPLAZAR_CON_ID_MONGO",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 5
+    },
+
+    {
+      "_id": "req_reservas_listar",
+      "_type": "request",
+      "parentId": "fld_res_reservas",
+      "name": "Listar reservas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/reservas",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_reservas_get",
+      "_type": "request",
+      "parentId": "fld_res_reservas",
+      "name": "Buscar reserva por ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/reservas/REEMPLAZAR_CON_ID_MONGO",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_reservas_crear",
+      "_type": "request",
+      "parentId": "fld_res_reservas",
+      "name": "Crear reserva",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reservas",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id_recurso\": \"REEMPLAZAR_CON_ID_MONGO_DE_UN_RECURSO\",\n  \"id_socio\": 1,\n  \"fecha_inicio\": \"2026-08-10T09:00:00.000Z\",\n  \"fecha_fin\": \"2026-08-10T12:00:00.000Z\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 3,
+      "description": "id_recurso debe ser el _id de un recurso ya creado (usar 'Crear recurso' primero y copiar el _id de la respuesta)."
+    },
+    {
+      "_id": "req_reservas_actualizar",
+      "_type": "request",
+      "parentId": "fld_res_reservas",
+      "name": "Actualizar reserva (confirmar/cancelar)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/reservas/REEMPLAZAR_CON_ID_MONGO",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"estado\": \"confirmada\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" }
+      ],
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_reservas_eliminar",
+      "_type": "request",
+      "parentId": "fld_res_reservas",
+      "name": "Eliminar reserva",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/reservas/REEMPLAZAR_CON_ID_MONGO",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "metaSortKey": 5
+    }
+  ]
+}
