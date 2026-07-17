@@ -8,4 +8,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Cambia esto. Si antes tenías findByUsername, ahora debe ser findByCorreo
     Optional<Usuario> findByCorreo(String correo);
+
+    boolean existsByCorreo(String correo);
 }

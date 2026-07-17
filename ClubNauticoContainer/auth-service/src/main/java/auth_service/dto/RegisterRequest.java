@@ -2,6 +2,7 @@ package auth_service.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
@@ -21,6 +22,7 @@ public class RegisterRequest {
     private String apellidos;
 
     @NotBlank(message = "El rol no puede estar vacío")
+    @Pattern(regexp = "\\d+", message = "El rol debe ser el ID numérico del rol (ej. \"1\"), no un nombre")
     private String rol;
 
     public RegisterRequest() {}

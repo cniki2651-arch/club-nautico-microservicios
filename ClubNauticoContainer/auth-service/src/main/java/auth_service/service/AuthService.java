@@ -3,6 +3,7 @@ package auth_service.service;
 import auth_service.dto.AuthResponse;
 import auth_service.entity.RefreshToken;
 import auth_service.entity.Usuario;
+import auth_service.exception.DuplicateEmailException;
 import auth_service.repository.UsuarioRepository;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,9 @@ public class AuthService {
      * un AuthResponse con el Access Token y Refresh Token generados.
      */
     public AuthResponse register(Usuario usuario) {
+        if (usuarioRepository.existsByCorreo(usuario.getCorreo())) {
+            throw new DuplicateEmailException(usuario.getCorreo());
+        }
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         Usuario saved = usuarioRepository.save(usuario);
 

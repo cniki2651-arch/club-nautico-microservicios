@@ -45,6 +45,19 @@ public class GlobalExceptionHandler {
      * Captura fallos de @NotBlank, @Email, @Size, etc.
      * Retorna el campo exacto y su mensaje de error.
      */
+    /**
+     * Correo ya registrado al intentar crear una cuenta nueva.
+     */
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateEmail(
+            DuplicateEmailException ex, HttpServletRequest request) {
+
+        return new ResponseEntity<>(
+            buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request),
+            HttpStatus.CONFLICT
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
