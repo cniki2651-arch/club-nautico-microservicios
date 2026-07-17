@@ -33,6 +33,13 @@ public class SocioService {
         return toResponse(socio);
     }
 
+    public SocioResponse buscarPorDocumento(String tipoDocSiglas, String numero) {
+        Socio socio = socioRepository.findByTipoDocumento_SiglasAndDni(tipoDocSiglas, numero)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No se encontró un socio con ese documento."));
+        return toResponse(socio);
+    }
+
     public SocioResponse crear(SocioRequest request) {
         Socio socio = toEntity(request, new Socio());
         Socio guardado = socioRepository.save(socio);

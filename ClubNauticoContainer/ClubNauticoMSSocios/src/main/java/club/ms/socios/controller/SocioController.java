@@ -31,6 +31,14 @@ public class SocioController {
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2')")
+    @GetMapping("/buscar")
+    public ResponseEntity<SocioResponse> buscarPorDocumento(
+            @RequestParam("tipo_doc") String tipoDoc,
+            @RequestParam String numero) {
+        return ResponseEntity.ok(socioService.buscarPorDocumento(tipoDoc, numero));
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2')")
     @PostMapping
     public ResponseEntity<SocioResponse> crear(@Valid @RequestBody SocioRequest request) {
         SocioResponse creado = socioService.crear(request);
