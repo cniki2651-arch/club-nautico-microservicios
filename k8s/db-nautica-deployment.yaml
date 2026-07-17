@@ -49,8 +49,13 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/mysql
               name: mysql-nautica-data
+            - mountPath: /docker-entrypoint-initdb.d
+              name: db-nautica-init-sql
       restartPolicy: Always
       volumes:
         - name: mysql-nautica-data
           persistentVolumeClaim:
             claimName: mysql-nautica-data
+        - name: db-nautica-init-sql
+          configMap:
+            name: db-nautica-init-sql

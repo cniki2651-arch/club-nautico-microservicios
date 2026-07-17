@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  01-tablas.sql: "-- 1. Tabla de Embarcaciones (Clon exacto de Supabase)\r\nCREATE
+    TABLE embarcaciones (\r\n    id_embarcacion INT AUTO_INCREMENT PRIMARY KEY,\r\n
+    \   id_socio INT NULL, -- Referencia lógica a ms-socios (sin FOREIGN KEY)\r\n
+    \   matricula VARCHAR(50) UNIQUE NOT NULL,\r\n    nombre_nave VARCHAR(100) NOT
+    NULL,\r\n    eslora DECIMAL(10,2) NOT NULL,\r\n    tipo VARCHAR(50) NOT NULL,\r\n
+    \   estado_capitania VARCHAR(50) NOT NULL\r\n);\r\n\r\n-- 2. Tabla de Radas (Clon
+    exacto de Supabase)\r\nCREATE TABLE radas (\r\n    id_rada INT AUTO_INCREMENT
+    PRIMARY KEY,\r\n    codigo VARCHAR(20) UNIQUE NOT NULL,\r\n    dimensiones VARCHAR(50)
+    NULL,\r\n    estado VARCHAR(50) NULL,\r\n    id_embarcacion INT NULL,\r\n    FOREIGN
+    KEY (id_embarcacion) REFERENCES embarcaciones(id_embarcacion) ON DELETE SET NULL\r\n);\r\n\r\n--
+    3. Tabla de Zarpes (Clon exacto de Supabase)\r\nCREATE TABLE zarpes (\r\n    id_zarpe
+    INT AUTO_INCREMENT PRIMARY KEY,\r\n    id_socio INT NOT NULL, -- Referencia lógica\r\n
+    \   id_embarcacion INT NOT NULL,\r\n    id_tripulante INT NOT NULL, -- Referencia
+    lógica\r\n    fecha_salida DATE NOT NULL,\r\n    hora_salida TIME NOT NULL,\r\n
+    \   fecha_retorno DATE NOT NULL,\r\n    hora_retorno TIME NOT NULL,\r\n    destino
+    VARCHAR(150) NOT NULL,\r\n    pasajeros JSON NULL, -- Soporte nativo para JSON
+    en MySQL\r\n    estado VARCHAR(50) NOT NULL,\r\n    FOREIGN KEY (id_embarcacion)
+    REFERENCES embarcaciones(id_embarcacion)\r\n);\r\n\r\nCREATE TABLE tripulantes
+    (\r\n    id_tripulante INT AUTO_INCREMENT PRIMARY KEY,\r\n    id_tipo_doc INT
+    NOT NULL,\r\n    nombres VARCHAR(100) NOT NULL,\r\n    apellidos VARCHAR(100)
+    NOT NULL,\r\n    dni VARCHAR(20) UNIQUE NOT NULL,\r\n    rol VARCHAR(50) NOT NULL,\r\n
+    \   licencia VARCHAR(50) NULL,\r\n    estado VARCHAR(50) NOT NULL DEFAULT 'Autorizado'\r\n);\r\n\r\n--
+    4. Datos de prueba\r\nINSERT INTO radas (codigo, dimensiones, estado) VALUES ('A-01',
+    'Pequeña', 'Disponible');\r\nINSERT INTO radas (codigo, dimensiones, estado) VALUES
+    ('A-02', 'Mediana', 'Disponible');\r\nINSERT INTO radas (codigo, dimensiones,
+    estado) VALUES ('B-01', 'Grande', 'Disponible');"
+kind: ConfigMap
+metadata:
+  name: db-nautica-init-sql
+  namespace: default

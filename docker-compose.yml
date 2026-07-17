@@ -185,6 +185,7 @@ services:
       - "${NAUTICA_DB_PORT:-3307}:3306"
     volumes:
       - mysql_nautica_data:/var/lib/mysql
+      - ./club-nautico-ms-nautica/tablas.sql:/docker-entrypoint-initdb.d/01-tablas.sql:ro
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${NAUTICA_DB_PASSWORD:-root}" ]
       interval: 10s
