@@ -1,7 +1,9 @@
 package club.ms.facturacion.service;
 
+import club.ms.facturacion.dto.ConsumoDetalleResponse;
 import club.ms.facturacion.dto.ConsumoRequest;
 import club.ms.facturacion.dto.ConsumoResponse;
+import club.ms.facturacion.dto.SocioConConsumosResponse;
 import club.ms.facturacion.exception.ResourceNotFoundException;
 import club.ms.facturacion.model.Consumo;
 import club.ms.facturacion.model.Factura;
@@ -10,8 +12,11 @@ import club.ms.facturacion.repository.FacturaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +62,24 @@ public class ConsumoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Consumo no encontrado con id: " + id));
         Consumo actualizado = toEntity(request, consumo);
         return toResponse(consumoRepository.save(actualizado));
+    }
+
+    // Agrupa los consumos sin facturar por socio (usado por la pantalla de
+    // Facturación para armar la facturación mensual).
+    public List<SocioConConsumosResponse> listarSinFacturarAgrupados() {
+        return consumoRepository.findByFacturaIsNull().stream()
+                .collect(Collectors.groupingBy(Consumo::getIdSocio))
+                .entrySet().stream()
+                .map(entry -> new SocioConConsumosResponse(
+                        entry.getKey(),
+                        entry.getValue().stream().map(Consumo::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add),
+                        entry.getValue().stream()
+                                .map(c -> new ConsumoDetalleResponse(
+                                        c.getIdConsumo(), c.getServicio(), c.getMonto(), c.getDescripcion(), c.getFechaConsumo()))
+                                .toList()
+                ))
+                .sorted(Comparator.comparing(SocioConConsumosResponse::getIdSocio))
+                .toList();
     }
 
     public void eliminar(Long id) {

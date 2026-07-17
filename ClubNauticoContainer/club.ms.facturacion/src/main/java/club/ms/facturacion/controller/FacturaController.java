@@ -47,14 +47,25 @@ public class FacturaController {
         return ResponseEntity.ok(facturaService.actualizar(id, request));
     }
 
-    // Registra el pago de una factura (usado por el panel de cobranza)
+    // Registra el pago de una factura y devuelve el desglose de interés moratorio
+    // (usado por el panel de cobranza -- DashboardCobranza.tsx lee monto_base/
+    // interes_sbs/dias_mora/total_pagado del resultado).
     @PreAuthorize("hasAuthority('ROLE_4')")
     @PatchMapping("/{id}/pagar")
-    public ResponseEntity<FacturaResponse> registrarPago(
+    public ResponseEntity<club.ms.facturacion.dto.PagoResponse> registrarPago(
             @PathVariable Long id,
             @RequestParam(required = false) LocalDate fechaPago) {
         LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now();
-        return ResponseEntity.ok(facturaService.registrarPago(id, fecha));
+        return ResponseEntity.ok(facturaService.registrarPagoConDesglose(id, fecha));
+    }
+
+    // Usado por ms-nautica (via gateway) antes de autorizar un zarpe, y por el
+    // panel de retiros para saber si un socio tiene saldo pendiente. La clave
+    // "deuda" coincide con lo que el frontend ya sabe leer (ZarpesPage.tsx).
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_3', 'ROLE_4')")
+    @GetMapping("/deuda/{idSocio}")
+    public ResponseEntity<java.util.Map<String, java.math.BigDecimal>> deudaPendiente(@PathVariable Long idSocio) {
+        return ResponseEntity.ok(java.util.Map.of("deuda", facturaService.calcularDeudaPendiente(idSocio)));
     }
 
     @PreAuthorize("hasAuthority('ROLE_4')")
@@ -62,5 +73,33 @@ public class FacturaController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         facturaService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_4')")
+    @GetMapping("/dashboard")
+    public ResponseEntity<club.ms.facturacion.dto.DashboardFinanzasResponse> dashboardFinanzas() {
+        return ResponseEntity.ok(facturaService.dashboardFinanzas());
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_4')")
+    @GetMapping("/estados-cuenta")
+    public ResponseEntity<List<club.ms.facturacion.dto.EstadoCuentaResponse>> estadosCuenta() {
+        return ResponseEntity.ok(facturaService.estadosCuentaGeneral());
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_4')")
+    @PostMapping("/fraccionar")
+    public ResponseEntity<club.ms.facturacion.dto.FraccionarResponse> fraccionar(
+            @Valid @RequestBody club.ms.facturacion.dto.FraccionarRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(facturaService.fraccionar(request.getIdFactura(), request.getCuotas()));
+    }
+
+    // Consolida los consumos pendientes en facturas nuevas, una por socio
+    // (version simplificada -- ver nota en FacturaService.generarFacturacionMensual)
+    @PreAuthorize("hasAuthority('ROLE_4')")
+    @PostMapping("/generar")
+    public ResponseEntity<java.util.Map<String, Object>> generarFacturacionMensual() {
+        return ResponseEntity.ok(facturaService.generarFacturacionMensual(null));
     }
 }

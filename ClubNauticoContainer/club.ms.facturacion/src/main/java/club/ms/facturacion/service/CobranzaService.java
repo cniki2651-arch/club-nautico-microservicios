@@ -45,11 +45,16 @@ public class CobranzaService {
 
     // Facturas vencidas: calcula el interes y GUARDA un registro en morosidad_intereses
     public List<CobranzaResponse> facturasVencidasConInteres() {
+        return facturasVencidasConInteres(null);
+    }
+
+    // Version con tasa anual configurable (si no se pasa, usa la tasa por defecto)
+    public List<CobranzaResponse> facturasVencidasConInteres(Double tasaAnualOverride) {
         LocalDate hoy = LocalDate.now();
         return facturaRepository.findByEstadoPago("VIGENTE")
                 .stream()
                 .filter(f -> f.getFechaVencimiento().isBefore(hoy))
-                .map(this::calcularYRegistrarMorosidad)
+                .map(f -> calcularYRegistrarMorosidad(f, tasaAnualOverride))
                 .toList();
     }
 
@@ -76,10 +81,11 @@ public class CobranzaService {
     }
 
     // Calcula el interes de una factura vencida y persiste el registro en morosidad_intereses
-    private CobranzaResponse calcularYRegistrarMorosidad(Factura factura) {
+    private CobranzaResponse calcularYRegistrarMorosidad(Factura factura, Double tasaAnualOverride) {
         LocalDate hoy = LocalDate.now();
         long diasMora = ChronoUnit.DAYS.between(factura.getFechaVencimiento(), hoy);
-        BigDecimal interes = calcularInteresMoratorio(factura.getMontoBase(), diasMora);
+        double tasa = tasaAnualOverride != null ? tasaAnualOverride : tasaInteresAnual;
+        BigDecimal interes = calcularInteresMoratorio(factura.getMontoBase(), diasMora, tasa);
 
         MorosidadInteres registro = new MorosidadInteres();
         registro.setFactura(factura);
@@ -106,12 +112,24 @@ public class CobranzaService {
         );
     }
 
+    // Expuesto para que FacturaService pueda calcular el desglose de interes al
+    // momento de registrar un pago (usado por el panel de Cobranza).
+    public BigDecimal calcularInteresParaFactura(BigDecimal montoBase, LocalDate fechaVencimiento) {
+        long diasMora = ChronoUnit.DAYS.between(fechaVencimiento, LocalDate.now());
+        return calcularInteresMoratorio(montoBase, diasMora, tasaInteresAnual);
+    }
+
+    public long calcularDiasMora(LocalDate fechaVencimiento) {
+        long dias = ChronoUnit.DAYS.between(fechaVencimiento, LocalDate.now());
+        return Math.max(dias, 0);
+    }
+
     // Formula de interes compuesto simplificada: monto * ((1 + tasaAnual)^(dias/360) - 1)
-    private BigDecimal calcularInteresMoratorio(BigDecimal montoBase, long diasMora) {
+    private BigDecimal calcularInteresMoratorio(BigDecimal montoBase, long diasMora, double tasaAnual) {
         if (diasMora <= 0) {
             return BigDecimal.ZERO;
         }
-        double factor = Math.pow(1 + tasaInteresAnual, diasMora / 360.0) - 1;
+        double factor = Math.pow(1 + tasaAnual, diasMora / 360.0) - 1;
         BigDecimal interes = montoBase.multiply(BigDecimal.valueOf(factor));
         return interes.setScale(2, RoundingMode.HALF_UP);
     }

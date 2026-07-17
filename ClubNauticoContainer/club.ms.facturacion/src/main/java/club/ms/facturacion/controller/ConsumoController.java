@@ -32,6 +32,12 @@ public class ConsumoController {
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_4')")
+    @GetMapping("/sin-facturar/agrupados")
+    public ResponseEntity<List<club.ms.facturacion.dto.SocioConConsumosResponse>> listarSinFacturarAgrupados() {
+        return ResponseEntity.ok(consumoService.listarSinFacturarAgrupados());
+    }
+
+    @PreAuthorize("hasAnyAuthority('ROLE_1', 'ROLE_2', 'ROLE_4')")
     @GetMapping("/{id}")
     public ResponseEntity<ConsumoResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(consumoService.buscarPorId(id));
