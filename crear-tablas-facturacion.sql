@@ -38,3 +38,20 @@ CREATE TABLE morosidad_intereses (
     fecha_calculo DATE NOT NULL,
     CONSTRAINT FK_morosidad_factura FOREIGN KEY (id_factura) REFERENCES facturas(id_factura)
 );
+
+-- Tabla tarifas_servicios: precios de referencia de los servicios ofrecidos por el club
+CREATE TABLE tarifas_servicios (
+    id_tarifa BIGINT IDENTITY(1,1) PRIMARY KEY,
+    servicio VARCHAR(255) NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    activo BIT NOT NULL DEFAULT 1
+);
+
+-- Tabla disponibilidad_servicios: habilitacion/deshabilitacion de servicios (ej. mantenimiento)
+CREATE TABLE disponibilidad_servicios (
+    id_disponibilidad BIGINT IDENTITY(1,1) PRIMARY KEY,
+    servicio VARCHAR(255) NOT NULL,
+    disponible BIT NOT NULL DEFAULT 1,
+    motivo VARCHAR(255) NULL,
+    actualizado_en DATETIME2 NULL
+);

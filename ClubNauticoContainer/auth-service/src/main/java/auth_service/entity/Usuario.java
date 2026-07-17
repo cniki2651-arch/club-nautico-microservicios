@@ -24,8 +24,10 @@ public class Usuario implements UserDetails { // <--- 1. AGREGADO IMPLEMENTS
     private Long id;
 
     @JsonIgnore
+    @Column(nullable = false)
     private String password;
     private String rol;
+    @Column(nullable = false, unique = true)
     private String correo;
     private String nombres;
     private String apellidos;
