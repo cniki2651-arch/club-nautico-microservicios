@@ -13,6 +13,7 @@ const os = require('os');
 const EUREKA_ENABLED = process.env.EUREKA_ENABLED !== 'false';
 const EUREKA_HOST = process.env.EUREKA_HOST || 'localhost';
 const EUREKA_PORT = parseInt(process.env.EUREKA_PORT || '8761', 10);
+const EUREKA_SSL = process.env.EUREKA_SSL === 'true';
 const SERVICE_HOST = process.env.SERVICE_HOST || os.hostname();
 const SERVICE_IP_ADDR = process.env.SERVICE_IP_ADDR || '127.0.0.1';
 const PORT = parseInt(process.env.PORT || '8086', 10);
@@ -54,6 +55,7 @@ function getInstance() {
     eureka: {
       host: EUREKA_HOST,
       port: EUREKA_PORT,
+      ssl: EUREKA_SSL,
       servicePath: '/eureka/apps/',
       maxRetries: 5,
       requestRetryDelay: 2000,
