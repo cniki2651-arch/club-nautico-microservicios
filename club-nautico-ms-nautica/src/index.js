@@ -13,11 +13,13 @@ const embarcacionesRoutes = require('./routes/embarcacionesRoutes');
 const radasRoutes = require('./routes/radasRoutes');
 const zarpesRoutes = require('./routes/zarpesRoutes');
 const tripulantesRoutes = require('./routes/tripulantesRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 app.use('/api/nautica/embarcaciones', embarcacionesRoutes);
 app.use('/api/nautica/radas', radasRoutes);
 app.use('/api/nautica/zarpes', zarpesRoutes);
 app.use('/api/nautica/tripulantes', tripulantesRoutes);
+app.use('/api/nautica/dashboard', dashboardRoutes);
 
 // A. HEALTH CHECK (Obligatorio para Kubernetes y Eureka)
 app.get('/health', (req, res) => {
