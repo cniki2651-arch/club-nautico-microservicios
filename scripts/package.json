@@ -1,0 +1,15 @@
+{
+  "name": "club-nautico-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scripts de utilidad para el entorno local del proyecto Club Nautico",
+  "scripts": {
+    "sync-local-db": "node sync-local-db.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mssql": "^11.0.1",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0"
+  }
+}
