@@ -43,6 +43,8 @@ docker-data/
 
 ### ===== Variables de entorno / secretos ===== ###
 *.env
+.env.*
+!.env.example
 application-local.yml
 application-local.yaml
 
