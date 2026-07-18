@@ -114,6 +114,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-socios:5432/${SOCIOS_DB_NAME:-sociosDb}
       SPRING_DATASOURCE_USERNAME: ${SOCIOS_DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${SOCIOS_DB_PASSWORD:-postgres}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     depends_on:
@@ -161,6 +162,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:sqlserver://sqlserver-facturacion:1433;databaseName=${FACTURACION_DB_NAME:-facturacionDb};encrypt=true;trustServerCertificate=true
       SPRING_DATASOURCE_USERNAME: sa
       SPRING_DATASOURCE_PASSWORD: ${FACTURACION_DB_PASSWORD:-ClubNautico2026!}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
     depends_on:
